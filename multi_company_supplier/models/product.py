@@ -19,5 +19,27 @@
 #                                                                             #
 ###############################################################################
 
-import partner
-import product
+from openerp.osv.orm import Model
+from openerp.osv import fields
+
+
+class ProductSupplierinfo(Model):
+    _inherit = 'product.supplierinfo'
+
+    _columns = {
+        'supplier_product_id': fields.many2one(
+            'product.product', 'Supplier product'
+        ),
+    }
+
+
+class ProductProduct(Model):
+    _inherit = 'product.product'
+
+    _columns = {
+        'customers_supplierinfo_ids': fields.one2many(
+            'product.supplierinfo',
+            'supplier_product_id',
+            'Customers supplier info'
+        ),
+    }

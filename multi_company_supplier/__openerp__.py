@@ -29,9 +29,10 @@ and a company in the same OpenERP database.
 It permits to display the available stock of the supplier.""",
     'author': 'Akretion',
     'website': 'http://www.akretion.com/',
-    'depends': ['base'],
+    'depends': ['base', 'product'],
     'data': [
         'views/partner.xml',
+        'views/product.xml',
     ],
     'demo': [],
     'installable': True,
