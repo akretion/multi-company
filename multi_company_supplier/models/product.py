@@ -22,6 +22,8 @@
 from openerp.osv.orm import Model
 from openerp.osv import fields
 
+from openerp.addons import decimal_precision as dp
+
 
 class ProductSupplierinfo(Model):
     _inherit = 'product.supplierinfo'
@@ -30,11 +32,29 @@ class ProductSupplierinfo(Model):
         'supplier_product_id': fields.many2one(
             'product.product', 'Supplier product'
         ),
+        'supplier_company_id': fields.related(
+            'name',
+            'partner_company_id',
+            type='many2one',
+            relation='res.company'
+        ),
     }
 
 
 class ProductProduct(Model):
     _inherit = 'product.product'
+
+    def _suppliers_usable_qty(self, cr, uid, ids, field_name, arg, context):
+        res = {}
+        for product in self.browse(cr, uid, ids, context=context):
+            quantity = 0.0
+            for supplier in product.seller_ids:
+                supplier_product = supplier.supplier_product_id
+                if not supplier_product:
+                    continue
+                quantity += supplier_product.immediately_usable_qty
+            res[product.id] = quantity
+        return res
 
     _columns = {
         'customers_supplierinfo_ids': fields.one2many(
@@ -42,4 +62,10 @@ class ProductProduct(Model):
             'supplier_product_id',
             'Customers supplier info'
         ),
+        'suppliers_immediately_usable_qty': fields.function(
+            _suppliers_usable_qty,
+            digits_compute=dp.get_precision('Product UoM'),
+            type='float',
+            string='Suppliers Immediately Usable',
+            help="Quantity of products available for sale from our suppliers."),
     }

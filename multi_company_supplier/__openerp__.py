@@ -26,10 +26,13 @@
     'description': """This module permit to make a relation between a supplier
 and a company in the same OpenERP database.
 
-It permits to display the available stock of the supplier.""",
+It permits to display the available stock of the supplier.
+
+This module depends on `stock_available_immediately` available at https://code.launchpad.net/~stock-logistic-core-editors/stock-logistic-warehouse/7.0
+""",
     'author': 'Akretion',
     'website': 'http://www.akretion.com/',
-    'depends': ['base', 'product'],
+    'depends': ['base', 'product', 'stock_available_immediately'],
     'data': [
         'views/partner.xml',
         'views/product.xml',
