@@ -32,6 +32,12 @@ class ProductSupplierinfo(Model):
         'supplier_product_id': fields.many2one(
             'product.product', 'Supplier product'
         ),
+        'supplier_product_code': fields.related(
+            'supplier_product_id',
+            'default_code',
+            type="char",
+            string="Supplier code",
+        ),
         'supplier_company_id': fields.related(
             'name',
             'partner_company_id',
