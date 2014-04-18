@@ -75,3 +75,11 @@ class ProductProduct(Model):
             string='Suppliers Immediately Usable',
             help="Quantity of products available for sale from our suppliers."),
     }
+
+    def has_same_erp_supplier(self, cr, uid, ids, context=None):
+        assert len(ids) == 1
+        product = self.browse(cr, uid, ids[0], context=context)
+        for supplierinfo in product.seller_ids:
+            if supplierinfo.supplier_product_id:
+                return True
+        return False
