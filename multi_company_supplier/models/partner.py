@@ -32,6 +32,14 @@ class ResPartner(Model):
         ),
     }
 
+    def find_company_partner_id(self, cr, uid, company_id, context=None):
+        partner_ids = self.search(
+            cr, uid,
+            [('partner_company_id', '=', company_id)],
+            context=context
+        )
+        return partner_ids[0]
+
 
 class ResCompany(Model):
     _inherit = 'res.company'
