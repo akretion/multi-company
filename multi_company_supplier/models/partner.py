@@ -32,10 +32,15 @@ class ResPartner(Model):
         ),
     }
 
-    def find_company_partner_id(self, cr, uid, company_id, context=None):
+    def find_company_partner_id(self, cr, uid, company_id, owner_company_id,
+                                context=None):
         partner_ids = self.search(
             cr, uid,
-            [('partner_company_id', '=', company_id)],
+            [
+                ('partner_company_id', '=', company_id),
+                ('company_id', '=', owner_company_id),
+                ('active', '=', True),
+            ],
             context=context
         )
         return partner_ids[0]

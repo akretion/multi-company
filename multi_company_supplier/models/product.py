@@ -63,13 +63,39 @@ class ProductProduct(Model):
         return res
 
     def _standard_price_compute(self, cr, uid, ids, name, arg, context=None):
+        pricelist_obj = self.pool.get('product.pricelist')
+        partner_obj = self.pool.get('res.partner')
+        user_obj = self.pool.get('res.users')
+
         res = {}
         for product in self.browse(cr, uid, ids, context=context):
             for supplier in product.seller_ids:
                 supplier_product = supplier.supplier_product_id
                 if not supplier_product:
                     continue
-                res[product.id] = supplier_product.list_price
+                user = user_obj.browse(cr, uid, uid, context=context)
+                partner_id = partner_obj.find_company_partner_id(
+                    cr, uid,
+                    user.company_id.id,
+                    supplier_product.company_id.id,
+                    context=context
+                )
+                partner = partner_obj.browse(
+                    cr, uid, partner_id, context=context
+                )
+                pricelist_id = partner.property_product_pricelist.id
+                if pricelist_id:
+                    pricelist_res = pricelist_obj.price_get(
+                        cr, uid,
+                        [pricelist_id],
+                        supplier_product.id,
+                        1,
+                        partner=partner.id,
+                        context=context
+                    )
+                    res[product.id] = pricelist_res[pricelist_id]
+                else:
+                    res[product.id] = supplier_product.list_price
                 break
             if product.id not in res:
                 res[product.id] = product.manual_cost_price
