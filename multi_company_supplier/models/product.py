@@ -62,6 +62,29 @@ class ProductProduct(Model):
             res[product.id] = quantity
         return res
 
+    def _standard_price_compute(self, cr, uid, ids, name, arg, context=None):
+        res = {}
+        for product in self.browse(cr, uid, ids, context=context):
+            for supplier in product.seller_ids:
+                supplier_product = supplier.supplier_product_id
+                if not supplier_product:
+                    continue
+                res[product.id] = supplier_product.list_price
+                break
+            if product.id not in res:
+                res[product.id] = product.manual_cost_price
+        return res
+
+    def _has_same_erp_supplier(self, cr, uid, ids, name, arg, context=None):
+        res = {}
+        for product in self.browse(cr, uid, ids, context=context):
+            res[product.id] = False
+            for supplierinfo in product.seller_ids:
+                if supplierinfo.supplier_product_id:
+                    res[product.id] = True
+                    break
+        return res
+
     _columns = {
         'customers_supplierinfo_ids': fields.one2many(
             'product.supplierinfo',
@@ -73,13 +96,23 @@ class ProductProduct(Model):
             digits_compute=dp.get_precision('Product UoM'),
             type='float',
             string='Suppliers Immediately Usable',
-            help="Quantity of products available for sale from our suppliers."),
+            help="Quantity of products available for sale from our suppliers."
+        ),
+        'manual_cost_price': fields.float(
+            'Cost',
+            digits_compute=dp.get_precision('Product Price'),
+            help="Cost price of the product used for standard stock valuation "
+                 "in accounting and used as a base price on purchase orders.",
+            groups="base.group_user"
+        ),
+        'standard_price': fields.function(
+            _standard_price_compute,
+            type='float',
+            string='Cost',
+            groups="base.group_user"
+        ),
+        'has_same_erp_supplier': fields.function(
+            _has_same_erp_supplier,
+            type="boolean",
+        ),
     }
-
-    def has_same_erp_supplier(self, cr, uid, ids, context=None):
-        assert len(ids) == 1
-        product = self.browse(cr, uid, ids[0], context=context)
-        for supplierinfo in product.seller_ids:
-            if supplierinfo.supplier_product_id:
-                return True
-        return False

@@ -36,6 +36,13 @@
                     <newline/>
                     <field name="suppliers_immediately_usable_qty" />
                 </field>
+                <field name="standard_price" position="after">
+                    <field name="manual_cost_price" attrs="{'invisible': [('has_same_erp_supplier', '=', True)]}" />
+                    <field name="has_same_erp_supplier" invisible="1" />
+                </field>
+                <field name="standard_price" position="attributes">
+                    <attribute name="attrs">{'invisible': [('has_same_erp_supplier', '=', False)]}</attribute>
+                </field>
             </field>
         </record>
     </data>
