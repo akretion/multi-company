@@ -1,6 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <openerp>
     <data>
+
+        <record id="product_search_form_view" model="ir.ui.view">
+            <field name="inherit_id" ref="product.product_search_form_view"/>
+            <field name="model">product.product</field>
+            <field name="arch" type="xml">
+                <search string="Product">
+                    <field name="categ_id" position="before">
+                        <filter string="Invalid Supplier Info" domain="[('seller_ids.invalid_supplier_info', '=', True)]"/>
+                    </field>
+               </search>
+            </field>
+        </record>
+
         <record id="product_supplierinfo_form_view" model="ir.ui.view">
             <field name="name">product.supplierinfo.form.view</field>
             <field name="model">product.supplierinfo</field>
@@ -10,7 +23,7 @@
                     <field name="supplier_company_id" invisible="1" />
                     <field
                         name="supplier_product_id"
-                        domain="[('company_id', '=', supplier_company_id)]"
+                        domain="[('company_id', '=', supplier_company_id), ('sale_ok', '=', True), ('type', '!=', 'service')]"
                         attrs="{'invisible': [('supplier_company_id', '=', False)]}"
                     />
                     <field

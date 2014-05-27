@@ -28,6 +28,17 @@ from openerp.addons import decimal_precision as dp
 class ProductSupplierinfo(Model):
     _inherit = 'product.supplierinfo'
 
+    def _get_validity(self, cr, uid, ids, field_name, args, context=None):
+        result = {}
+        invalid_ids = self.search(cr, uid, [
+            ['name.partner_company_id', '!=', False],
+            ['supplier_product_id', '=', False],
+            ['id', 'in', ids],
+            ], context=context)
+        for supplier_id in ids:
+            result[supplier_id] = supplier_id in invalid_ids
+        return result
+
     _columns = {
         'supplier_product_id': fields.many2one(
             'product.product', 'Supplier product'
@@ -44,11 +55,35 @@ class ProductSupplierinfo(Model):
             type='many2one',
             relation='res.company'
         ),
+        'invalid_supplier_info': fields.function(
+            _get_validity,
+            string='Invalid Supplier Info',
+            type='boolean',
+            store={
+                'product.supplierinfo': (
+                    lambda self, cr, uid, ids, c={}: ids,
+                    ['supplier_product_id', 'name'],
+                    10),
+                },
+            ),
     }
 
 
 class ProductProduct(Model):
     _inherit = 'product.product'
+
+    def search(self, cr, uid, args, offset=0, limit=None, order=None, context=None, count=False):
+        change = True
+        for arg in args:
+            if isinstance(arg, str):
+                continue
+            if arg[0] == 'company_id':
+                change = False
+                break
+        if change:
+            user = self.pool.get('res.users').read(cr, uid, uid, context=context)
+            args.append(('company_id', '=', user['company_id'][0]))
+        return super(ProductProduct, self).search(cr, uid, args, offset, limit, order, context)
 
     def _suppliers_usable_qty(self, cr, uid, ids, field_name, arg, context):
         res = {}
@@ -80,6 +115,9 @@ class ProductProduct(Model):
                     supplier_product.company_id.id,
                     context=context
                 )
+                if not partner_id:
+                    res[product.id] = supplier_product.list_price
+                    break
                 partner = partner_obj.browse(
                     cr, uid, partner_id, context=context
                 )

@@ -43,7 +43,9 @@ class ResPartner(Model):
             ],
             context=context
         )
-        return partner_ids[0]
+        if partner_ids:
+            return partner_ids[0]
+        return None
 
 
 class ResCompany(Model):
