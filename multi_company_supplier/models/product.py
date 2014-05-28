@@ -144,7 +144,7 @@ class ProductProduct(Model):
         for product in self.browse(cr, uid, ids, context=context):
             res[product.id] = False
             for supplierinfo in product.seller_ids:
-                if supplierinfo.supplier_product_id:
+                if supplierinfo.name.partner_company_id:
                     res[product.id] = True
                     break
         return res
