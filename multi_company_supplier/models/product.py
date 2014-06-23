@@ -19,6 +19,7 @@
 #                                                                             #
 ###############################################################################
 
+from openerp import SUPERUSER_ID
 from openerp.osv.orm import Model
 from openerp.osv import fields
 
@@ -85,15 +86,30 @@ class ProductProduct(Model):
             args.append(('company_id', '=', user['company_id'][0]))
         return super(ProductProduct, self).search(cr, uid, args, offset, limit, order, context)
 
-    def _suppliers_usable_qty(self, cr, uid, ids, field_name, arg, context):
+    def _suppliers_usable_qty(self, cr, uid, ids, field_name, arg,
+                              context=None):
+        if context is None:
+            context = {}
+        warehouse_obj = self.pool['stock.warehouse']
         res = {}
         for product in self.browse(cr, uid, ids, context=context):
             quantity = 0.0
             for supplier in product.seller_ids:
-                supplier_product = supplier.supplier_product_id
-                if not supplier_product:
+                if not supplier.supplier_product_id:
                     continue
-                quantity += supplier_product.immediately_usable_qty
+                company_id = supplier.supplier_product_id.company_id.id
+                warehouse_ids = warehouse_obj.search(
+                    cr, SUPERUSER_ID,
+                    [('company_id', '=', company_id)],
+                    context=context
+                )
+                for warehouse_id in warehouse_ids:
+                    supplier_product = self.browse(
+                        cr, SUPERUSER_ID,
+                        supplier.supplier_product_id.id,
+                        context={'warehouse': warehouse_id}
+                    )
+                    quantity += supplier_product.immediately_usable_qty
             res[product.id] = quantity
         return res
 
