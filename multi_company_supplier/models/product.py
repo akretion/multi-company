@@ -141,7 +141,7 @@ class ProductProduct(Model):
                 partner_context = context.copy()
                 partner_context['force_company'] = supplier_company.id
                 partner = partner_obj.browse(
-                    cr, SUPERUSER_ID, partner_id, context=context
+                    cr, SUPERUSER_ID, partner_id, context=partner_context
                 )
                 pricelist_id = partner.property_product_pricelist.id
                 if pricelist_id:
