@@ -118,29 +118,35 @@ class ProductProduct(Model):
         partner_obj = self.pool.get('res.partner')
         user_obj = self.pool.get('res.users')
 
+        if context is None:
+            context = {}
+
         res = {}
         for product in self.browse(cr, uid, ids, context=context):
             for supplier in product.seller_ids:
                 supplier_product = supplier.supplier_product_id
+                supplier_company = supplier_product.company_id
                 if not supplier_product:
                     continue
                 user = user_obj.browse(cr, uid, uid, context=context)
                 partner_id = partner_obj.find_company_partner_id(
                     cr, uid,
                     user.company_id.id,
-                    supplier_product.company_id.id,
+                    supplier_company.id,
                     context=context
                 )
                 if not partner_id:
                     res[product.id] = supplier_product.list_price
                     break
+                partner_context = context.copy()
+                partner_context['force_company'] = supplier_company.id
                 partner = partner_obj.browse(
-                    cr, uid, partner_id, context=context
+                    cr, SUPERUSER_ID, partner_id, context=context
                 )
                 pricelist_id = partner.property_product_pricelist.id
                 if pricelist_id:
                     pricelist_res = pricelist_obj.price_get(
-                        cr, uid,
+                        cr, SUPERUSER_ID,
                         [pricelist_id],
                         supplier_product.id,
                         1,

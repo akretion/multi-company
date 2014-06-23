@@ -19,6 +19,7 @@
 #                                                                             #
 ###############################################################################
 
+from openerp import SUPERUSER_ID
 from openerp.osv.orm import Model
 from openerp.osv import fields
 
@@ -35,7 +36,7 @@ class ResPartner(Model):
     def find_company_partner_id(self, cr, uid, company_id, owner_company_id,
                                 context=None):
         partner_ids = self.search(
-            cr, uid,
+            cr, SUPERUSER_ID,
             [
                 ('partner_company_id', '=', company_id),
                 ('company_id', '=', owner_company_id),
