@@ -129,7 +129,7 @@ class ProductProduct(Model):
                 if not supplier_product:
                     continue
                 user = user_obj.browse(cr, uid, uid, context=context)
-                partner_id = partner_obj.find_company_partner_id(
+                partner_id = partner_obj.find_company_customer_id(
                     cr, uid,
                     user.company_id.id,
                     supplier_company.id,

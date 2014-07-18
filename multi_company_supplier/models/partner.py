@@ -48,6 +48,22 @@ class ResPartner(Model):
             return partner_ids[0]
         return None
 
+    def find_company_customer_id(self, cr, uid, company_id, owner_company_id,
+                                 context=None):
+        partner_ids = self.search(
+            cr, SUPERUSER_ID,
+            [
+                ('partner_company_id', '=', company_id),
+                ('company_id', '=', owner_company_id),
+                ('active', '=', True),
+                ('customer', '=', True),
+            ],
+            context=context
+        )
+        if partner_ids:
+            return partner_ids[0]
+        return None
+
 
 class ResCompany(Model):
     _inherit = 'res.company'
