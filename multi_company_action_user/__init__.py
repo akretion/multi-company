@@ -22,7 +22,7 @@
 
 
 import res_company
-
+import model
 
 
 
