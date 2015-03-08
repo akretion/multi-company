@@ -21,7 +21,7 @@
 
 from openerp import SUPERUSER_ID
 from openerp.osv.orm import Model
-from openerp.osv import fields
+from openerp.osv import orm, fields
 
 from openerp.addons import decimal_precision as dp
 
@@ -120,21 +120,29 @@ class ProductProduct(Model):
 
         if context is None:
             context = {}
+        if not context.get('uid', False):
+            context['uid'] = uid
 
         res = {}
         for product in self.browse(cr, uid, ids, context=context):
             for supplier in product.seller_ids:
                 supplier_product = supplier.supplier_product_id
                 supplier_company = supplier_product.company_id
+                
                 if not supplier_product:
                     continue
-                user = user_obj.browse(cr, uid, uid, context=context)
+                # take uid from context because in product/product.py method price_get
+                # the uid is changed by admin so we won't find the good partner_id
+                original_uid = context.get('uid', False) or uid
+                user = user_obj.browse(cr, uid, original_uid, context=context)
+                
                 partner_id = partner_obj.find_company_customer_id(
                     cr, uid,
                     user.company_id.id,
                     supplier_company.id,
                     context=context
                 )
+               
                 if not partner_id:
                     res[product.id] = supplier_product.list_price
                     break
@@ -154,6 +162,7 @@ class ProductProduct(Model):
                         context=context
                     )
                     res[product.id] = pricelist_res[pricelist_id]
+                    #res[product.id] = pricelist_res[str(pricelist_id)]
                 else:
                     res[product.id] = supplier_product.list_price
                 break
