@@ -41,6 +41,7 @@ class ResPartner(Model):
                 ('partner_company_id', '=', company_id),
                 ('company_id', '=', owner_company_id),
                 ('active', '=', True),
+                ('supplier', '=', True),
             ],
             context=context
         )
