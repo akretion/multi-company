@@ -7,6 +7,7 @@
 
 from openerp import models, api, _
 import logging
+
 _logger = logging.getLogger(__name__)
 
 
@@ -33,7 +34,7 @@ class BaseHoldingInvoicing(models.AbstractModel):
             'name': data_line['name'],
             'price_unit': data_line['amount_untaxed'],
             'quantity': data_line.get('quantity', 1),
-            }
+        }
 
     @api.model
     def _prepare_invoice(self, data, lines):
@@ -45,7 +46,7 @@ class BaseHoldingInvoicing(models.AbstractModel):
             'origin': _('Holding Invoice'),
             'company_id': self._context['force_company'],
             'user_id': self._uid,
-            })
+        })
         return vals
 
     @api.model
@@ -64,6 +65,10 @@ class BaseHoldingInvoicing(models.AbstractModel):
 
     @api.model
     def _link_sale_order(self, invoice, sales):
+        return NotImplemented
+
+    @api.model
+    def _update_lines(self, inv_line_obj, lines, vals):
         return NotImplemented
 
     @api.model
@@ -87,6 +92,7 @@ class BaseHoldingInvoicing(models.AbstractModel):
             for data_line in data_lines:
                 val_line = loc_self._prepare_invoice_line(data_line)
                 lines |= inv_line_obj.create(val_line)
+                self._update_lines(inv_line_obj, lines, val_line)
             invoice_vals = loc_self._prepare_invoice(data, lines)
             _logger.debug('Generate the holding invoice')
             invoice = inv_obj.create(invoice_vals)
@@ -95,6 +101,8 @@ class BaseHoldingInvoicing(models.AbstractModel):
             sales = self.env['sale.order'].search(data['__domain'])
             self._link_sale_order(invoice, sales)
             invoices |= invoice
+        print 'AIIIIIIIIIIEEEEEEEEEEEEE'
+        import pdb; pdb.set_trace()
         return invoices
 
 
@@ -135,8 +143,7 @@ class ChildInvoicing(models.TransientModel):
     def _link_sale_order(self, invoice, sales):
         sales.write({'invoice_ids': [(6, 0, [invoice.id])]})
         order_lines = self.env['sale.order.line'].search([
-            ('order_id', 'in', sales.ids),
-            ])
+            ('order_id', 'in', sales.ids)])
         order_lines._store_set_values(['invoiced'])
         # Dummy call to workflow, will not create another invoice
         # but bind the new invoice to the subflow
@@ -150,9 +157,10 @@ class ChildInvoicing(models.TransientModel):
         data_lines.append({
             'name': _('Royalty'),
             'amount_untaxed': data['amount_untaxed'],
-            'quantity': - section.holding_discount/100.,
+            'quantity': - section.holding_discount / 100.,
             'sale_line_ids': [],
-            })
+        })
+        import pdb; pdb.set_trace()
         return data_lines
 
     @api.model

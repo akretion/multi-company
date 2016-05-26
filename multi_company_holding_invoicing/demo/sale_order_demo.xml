@@ -4,6 +4,7 @@
 
         <record id="sale_order_1" model="sale.order">
             <field name="partner_id" ref="base.res_partner_2"/>
+            <field name="client_order_ref">multicpny 1</field>
             <field name="partner_invoice_id" ref="base.res_partner_2"/>
             <field name="partner_shipping_id" ref="base.res_partner_2"/>
             <field name="user_id" ref="base.user_demo"/>
@@ -45,6 +46,7 @@
 
         <record id="sale_order_2" model="sale.order">
             <field name="partner_id" ref="base.res_partner_2"/>
+            <field name="client_order_ref">multicpny 2</field>
             <field name="partner_invoice_id" ref="base.res_partner_2"/>
             <field name="partner_shipping_id" ref="base.res_partner_2"/>
             <field name="user_id" ref="base.user_root"/>
@@ -77,6 +79,7 @@
 
         <record id="sale_order_3" model="sale.order">
             <field name="partner_id" ref="base.res_partner_14"/>
+            <field name="client_order_ref">multicpny 3</field>
             <field name="partner_invoice_id" ref="base.res_partner_14"/>
             <field name="partner_shipping_id" ref="base.res_partner_14"/>
             <field name="user_id" ref="base.user_root"/>
@@ -108,6 +111,7 @@
 
         <record id="sale_order_4" model="sale.order">
             <field name="partner_id" ref="base.res_partner_15"/>
+            <field name="client_order_ref">multicpny 4</field>
             <field name="partner_invoice_id" ref="base.res_partner_address_25"/>
             <field name="partner_shipping_id" ref="base.res_partner_address_25"/>
             <field name="user_id" ref="base.user_root"/>
@@ -158,6 +162,7 @@
 
         <record id="sale_order_5" model="sale.order">
             <field name="partner_id" ref="base.res_partner_2"/>
+            <field name="client_order_ref">multicpny 5</field>
             <field name="partner_invoice_id" ref="base.res_partner_2"/>
             <field name="partner_shipping_id" ref="base.res_partner_2"/>
             <field name="user_id" ref="base.user_demo"/>
@@ -199,6 +204,7 @@
 
         <record id="sale_order_6" model="sale.order">
             <field name="partner_id" ref="base.res_partner_18"/>
+            <field name="client_order_ref">multicpny 6</field>
             <field name="partner_invoice_id" ref="base.res_partner_18"/>
             <field name="partner_shipping_id" ref="base.res_partner_18"/>
             <field name="user_id" ref="base.user_root"/>
@@ -219,6 +225,7 @@
 
         <record id="sale_order_7" model="sale.order">
             <field name="partner_id" ref="base.res_partner_11"/>
+            <field name="client_order_ref">multicpny 7</field>
             <field name="partner_invoice_id" ref="base.res_partner_address_20"/>
             <field name="partner_shipping_id" ref="base.res_partner_address_20"/>
             <field name="user_id" ref="base.user_root"/>

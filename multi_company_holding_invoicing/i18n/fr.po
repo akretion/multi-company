@@ -105,7 +105,7 @@ msgstr "La facture de la holding doit être générer par équipe commercial"
 #: model:ir.actions.act_window,name:multi_company_holding_invoicing.action_wizard_holding_invoicing
 #: model:ir.ui.menu,name:multi_company_holding_invoicing.menu_wizard_holding_invoicing
 msgid "Holding Invoicing"
-msgstr "Génération de facture de Holding"
+msgstr "Génération facture de Holding"
 
 #. module: multi_company_holding_invoicing
 #: field:account.invoice,holding_sale_ids:0
