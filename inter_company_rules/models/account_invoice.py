@@ -17,6 +17,7 @@ class AccountInvoice(models.Model):
     @api.multi
     def invoice_validate(self):
         """ Validated invoice generate cross invoice base on company rules """
+        self.env.cache.clear()
         for invoice in self:
             # do not consider invoices that have already been auto-generated,
             # nor the invoices that were already validated in the past
