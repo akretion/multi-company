@@ -33,7 +33,7 @@ def get_record_id_user(self, cr, uid, record_id, context=None):
     else:
         raise orm.except_orm(_('Error !'),
                              _('No company found for the record_id %s on object %s' % (record_id, self._name)))
-    res = company_obj.get_company_action_user(cr, uid, comp_id, context=context)
+    res = company_obj.get_company_action_user(cr, SUPERUSER_ID, comp_id, context=context)
     return res
 
 orm.Model.get_record_id_user = get_record_id_user
