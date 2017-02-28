@@ -18,6 +18,7 @@ class AccountInvoice(models.Model):
     def invoice_validate(self):
         """ Validated invoice generate cross invoice base on company rules """
         self.env.cache.clear()
+        self.env.prefetch.clear()
         for invoice in self:
             # do not consider invoices that have already been auto-generated,
             # nor the invoices that were already validated in the past
@@ -105,6 +106,8 @@ class AccountInvoice(models.Model):
                 line_data, line)
             invoice_lines.append((0, 0, inv_line_data))
         invoice_vals.update({'invoice_line': invoice_lines})
+        self.env.cache.clear()
+        self.env.prefetch.clear()
         invoice = self.with_context(context).sudo(intercompany_uid).create(
             invoice_vals)
         if company.auto_validation:
