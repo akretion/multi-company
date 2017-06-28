@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<openerp>
+<data>
+
+    <record id="view_complete_company_transient_form" model="ir.ui.view">
+        <field name="model">complete.company.transient</field>
+        <field name="arch" type="xml">
+            <form string="complete_company_transient_form" create="1" delete="1" edit="1">
+                <sheet>
+                    <group col="3">
+                        <field name="model_ids" widget="many2many_tags" colspan="3"/>
+                        <field name="company_id" string="Apply on this company"/>
+                        <button name="reload" string="Reload" type="object"/>
+                        <separator string="Data"/>
+                        <field name="data_ids" colspan="3" nolabel="1">
+                            <tree>
+                                <field name="module"/>
+                                <field name="model"/>
+                                <field name="name"/>
+                                <field name="res_id" string="res_id"/>
+                                <field name="noupdate" string="noupdate"/>
+                                <field name="date_update"/>
+                                <field name="id"/>
+                            </tree>
+                        </field>
+                    </group>
+                </sheet>
+                <footer>
+                    <button name="apply" string="Apply" type="object" class="oe_highlight"/>
+                    <button special="cancel" string="Cancel" class="oe_link"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_complete_company_creation_act_window" model="ir.actions.act_window">
+        <field name="type">ir.actions.act_window</field>
+        <field name="name">Complete Company Creation</field>
+        <field name="res_model">complete.company.transient</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="domain">[]</field>
+        <field name="context">{}</field>
+    </record>
+
+    <record id="menu_complete_company_creation" model="ir.ui.menu" >
+        <field name="name">Complete Company</field>
+        <field name="sequence" eval="10" />
+        <field name="action" ref="action_complete_company_creation_act_window" />
+        <field name="parent_id" ref="base.menu_sales" />
+    </record>
+
+</data>
+</openerp>
