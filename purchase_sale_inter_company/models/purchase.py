@@ -78,9 +78,19 @@ class PurchaseOrder(models.Model):
             self.dest_address_id and self.dest_address_id.id or False)
         sale_order = self.env['sale.order'].create(sale_order_data)
         for purchase_line in self.order_line:
-            sale_line_data = self._prepare_sale_order_line_data(
-                purchase_line, dest_company, sale_order)
-            self.env['sale.order.line'].create(sale_line_data)
+            # prepare sale order line data
+            sale_line = self.env['sale.order.line'].new({
+                'order_id': sale_order.id,
+                'product_id': purchase_line.product_id.id,
+                'product_uom_qty': purchase_line.product_qty,  #TODO
+                'product_uom': purchase_line.product_id and purchase_line.product_id.uom_id.id or False,
+                'delay': purchase_line.product_id and purchase_line.product_id.sale_delay or 0.0,
+                'company_id': dest_company.id,
+                'auto_purchase_line_id': purchase_line.id
+            })
+            sale_line.product_id_change()
+            line_values = sale_line._convert_to_write(sale_line._cache)
+            self.env['sale.order.line'].create(line_values)
         # write supplier reference field on PO
         if not self.partner_ref:
             self.partner_ref = sale_order.name
@@ -143,59 +153,6 @@ class PurchaseOrder(models.Model):
                                     partner_addr['delivery']),
             'note': self.notes
         }
-
-    @api.model
-    def _prepare_sale_order_line_data(
-            self, purchase_line, dest_company, sale_order):
-        """ Generate the Sale Order Line values from the PO line
-            :param line : the origin Purchase Order Line
-            :rtype line : purchase.order.line record
-            :param company : the company of the created SO
-            :rtype company : res.company record
-            :param sale_order : the Sale Order
-        """
-        context = self._context.copy()
-        context['company_id'] = dest_company.id
-        # get sale line data from product onchange
-        sale_line_obj = self.env['sale.order.line'].browse(False)
-        sale_line_data = sale_line_obj.with_context(
-            context).product_id_change_with_wh(
-                pricelist=sale_order.pricelist_id.id,
-                product=(purchase_line.product_id and
-                         purchase_line.product_id.id or False),
-                qty=purchase_line.product_qty,
-                uom=(purchase_line.product_id and
-                     purchase_line.product_id.uom_id.id or False),
-                qty_uos=0,
-                uos=False,
-                name='',
-                partner_id=sale_order.partner_id.id,
-                lang=False,
-                update_tax=True,
-                date_order=sale_order.date_order,
-                packaging=False,
-                fiscal_position=sale_order.fiscal_position.id,
-                flag=False,
-                warehouse_id=sale_order.warehouse_id.id)
-        sale_line_data['value']['product_id'] = (
-            purchase_line.product_id and purchase_line.product_id.id or
-            False)
-        sale_line_data['value']['order_id'] = sale_order.id
-        sale_line_data['value']['delay'] = (purchase_line.product_id and
-                                            purchase_line.product_id.
-                                            sale_delay or 0.0)
-        sale_line_data['value']['company_id'] = dest_company.id
-        sale_line_data['value']['product_uom_qty'] = (purchase_line.
-                                                      product_qty)
-        sale_line_data['value']['product_uom'] = (
-            purchase_line.product_id and
-            purchase_line.product_id.uom_id.id or
-            purchase_line.product_uom.id)
-        if sale_line_data['value'].get('tax_id'):
-            sale_line_data['value']['tax_id'] = ([
-                [6, 0, sale_line_data['value']['tax_id']]])
-        sale_line_data['value']['auto_purchase_line_id'] = purchase_line.id
-        return sale_line_data['value']
 
     @api.multi
     def action_cancel(self):
