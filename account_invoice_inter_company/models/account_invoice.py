@@ -34,8 +34,8 @@ class AccountInvoice(models.Model):
                 MAP_JOURNAL_TYPE = {
                     'out_invoice': 'purchase',
                     'in_invoice': 'sale',
-                    'out_refund': 'purchase_refund',
-                    'in_refund': 'sale_refund',
+                    'out_refund': 'sale',
+                    'in_refund': 'purchase',
                 }
                 dest_inv_type = MAP_INVOICE_TYPE.get(src_invoice.type)
                 dest_journal_type = MAP_JOURNAL_TYPE.get(src_invoice.type)
@@ -115,7 +115,12 @@ class AccountInvoice(models.Model):
             dest_inv_line_data = self._prepare_invoice_line_data(
                 dest_invoice, dest_inv_type, dest_company, src_line,
                 src_company_partner_id)
-            self.env['account.invoice.line'].create(dest_inv_line_data)
+            dest_invoice_line = self.env['account.invoice.line'].create(dest_inv_line_data)
+            # relation with purchase order line
+            if dest_inv_type in ('in_invoice', 'out_refund'):
+                purchase_order_line_ids = src_line.sale_line_ids.mapped('auto_purchase_line_id')
+                if purchase_order_line_ids:
+                    purchase_order_line_ids.invoice_lines = [(6, 0, [dest_invoice_line.id])]
         # add tax_line_ids in created invoice
         dest_invoice_line_ids = dest_invoice.invoice_line_ids
         if (any(
