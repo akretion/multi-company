@@ -5,8 +5,12 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 
-from . import sales_team
-from . import sale
-from . import invoice
-from . import model
-from . import stock_picking
+from openerp import models, api
+
+
+class StockPicking(models.Model):
+    _inherit = 'stock.picking'
+
+    @api.onchange('state')
+    def onchange_state(self):
+        return self.env['sale.order']._compute_invoice_state()
