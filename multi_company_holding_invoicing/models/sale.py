@@ -42,6 +42,11 @@ class SaleOrder(models.Model):
         # Note for perf issue the 'holding_invoice_id.state' is not set here
         # as a dependency. Indeed the dependency is manually triggered when
         # the holding_invoice is generated or the state is changed
+        # Note because the 'picking_ids' field is not stored,
+        # the 'picking_ids.state' is not set here as a dependency.
+        # Indeed, the dependency is automatically triggered when
+        # the state of picking is changed
+        # (see onchange_state method in stock.picking).
         for sale in self:
             if not sale.section_id.holding_company_id:
                 sale.invoice_state = 'none'
