@@ -298,6 +298,12 @@ class AccountInvoice(models.Model):
             'partner_id': src_company_partner_id.id,
             'company_id': dest_company.id,
         }
+        # Compatibility with module account_invoice_start_end_dates
+        if hasattr(src_line, 'start_date') and hasattr(src_line, 'end_date'):
+            vals.update({
+                'start_date': src_line.start_date,
+                'end_date': src_line.end_date
+        })
         return vals
 
     @api.multi
