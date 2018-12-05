@@ -30,7 +30,7 @@
         <field name="partner_id" ref="partner_company_b"/>
         <field name="parent_id" ref="base.main_company"/>
         <field name="country_id" ref="base.fr"/>
-        <field name="vat">FR32123456789</field>
+        <field name="vat">BE0477472701</field>
         <field name="currency_id" ref="base.EUR"/>
         <field name="invoice_auto_validation">1</field>
     </record>
