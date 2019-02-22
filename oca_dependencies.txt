@@ -1,0 +1,2 @@
+server-tools https://github.com/acsone/server-tools 12.0-mig-onchange_helper
+multi-company https://github.com/akretion/multi-company 12-invoice-intercpny
