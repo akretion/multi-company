@@ -20,30 +20,33 @@ class SaleOrder(models.Model):
         readonly=True,
         copy=False,
         store=True)
-
     holding_invoice_id = fields.Many2one(
         'account.invoice',
         string='Holding Invoice',
         copy=False,
         readonly=True)
-
     invoice_state = fields.Selection([
         ('none', 'Not Applicable'),
         ('not_ready', 'Not Ready'),
         ('invoiceable', 'Invoiceable'),
         ('pending', 'Pending'),
         ('invoiced', 'Invoiced'),
-        ], string='Invoice State',
+    ], string='Invoice State',
         copy=False,
         compute='_compute_invoice_state',
         store=True)
 
     @api.multi
-    @api.depends('shipped', 'section_id.holding_company_id')
+    @api.depends('picking_ids', 'section_id.holding_company_id')
     def _compute_invoice_state(self):
         # Note for perf issue the 'holding_invoice_id.state' is not set here
         # as a dependency. Indeed the dependency is manually triggered when
         # the holding_invoice is generated or the state is changed
+        # Note because the 'picking_ids' field is not stored,
+        # the 'picking_ids.state' is not set here as a dependency.
+        # Indeed, the dependency is automatically triggered when
+        # the state of picking is changed
+        # (see onchange_state method in stock.picking).
         for sale in self:
             if not sale.section_id.holding_company_id:
                 sale.invoice_state = 'none'
@@ -52,7 +55,9 @@ class SaleOrder(models.Model):
                     sale.invoice_state = 'invoiced'
                 else:
                     sale.invoice_state = 'pending'
-            elif sale.shipped:
+            elif (sale.picking_ids and
+                  not sale.picking_ids.filtered(
+                    lambda r: r.state not in ['done', 'cancel'])):
                 sale.invoice_state = 'invoiceable'
             else:
                 sale.invoice_state = 'not_ready'
