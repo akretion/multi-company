@@ -205,8 +205,8 @@
         <field name="name">Bank Journal - (Company A)</field>
         <field name="code">BNK-A</field>
         <field name="type">bank</field>
-        <field name="default_credit_account_id" ref="a_sale_company_a"/>
-        <field name="default_debit_account_id" ref="a_sale_company_a"/>
+        <field name="default_credit_account_id" ref="a_bank_company_a"/>
+        <field name="default_debit_account_id" ref="a_bank_company_a"/>
         <field name="company_id" ref="company_a"/>
     </record>
 
@@ -225,8 +225,8 @@
         <field name="name">Bank Journal - (Company B)</field>
         <field name="code">BNK-B</field>
         <field name="type">bank</field>
-        <field name="default_credit_account_id" ref="a_sale_company_b"/>
-        <field name="default_debit_account_id" ref="a_sale_company_b"/>
+        <field name="default_credit_account_id" ref="a_bank_company_b"/>
+        <field name="default_debit_account_id" ref="a_bank_company_b"/>
         <field name="company_id" ref="company_b"/>
     </record>
 
