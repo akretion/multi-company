@@ -42,7 +42,7 @@ class ProductSupplierinfo(Model):
 
     _columns = {
         'supplier_product_id': fields.many2one(
-            'product.product', 'Supplier product'
+            'product.product', 'Supplier product', select=True,
         ),
         'supplier_product_code': fields.related(
             'supplier_product_id',
