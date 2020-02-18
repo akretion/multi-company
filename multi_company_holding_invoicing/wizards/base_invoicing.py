@@ -36,8 +36,10 @@ class BaseHoldingInvoicing(models.AbstractModel):
         if self._context.get('section_group_by') == 'none':
             name = product.name
         else:
-            name = '%s - %s' % (
-                data_line['name'], data_line.get('client_order_ref', ''))
+            name = data_line['name']
+            ref = data_line.get('client_order_ref')
+            if ref:
+                name += u" - %s" % ref
         taxes = product.taxes_id.filtered(
             lambda s : s.company_id.id==s._context['force_company'])
         if not taxes:
@@ -72,10 +74,18 @@ class BaseHoldingInvoicing(models.AbstractModel):
             'company_id': self._context['force_company'],
             'user_id': self._uid,
         })
-        # Remove fiscal position from vals
-        # Because fiscal position in vals is not that of the 'force_company'
-        if vals['fiscal_position']:
-            vals['fiscal_position'] = False
+        return vals
+
+    @api.model
+    def _apply_fiscal_position(self, vals, lines):
+        # Force the fiscal position based on partner fp
+        # on next version it will be better to play the onchange
+        partner = self.env['res.partner'].browse(vals['partner_id'])
+        fp = partner.property_account_position
+        vals['fiscal_position'] = fp.id
+        if fp:
+            for line in lines:
+                line.invoice_line_tax_id = fp.map_tax(line.invoice_line_tax_id)
         return vals
 
     @api.model
@@ -151,6 +161,13 @@ class HoldingInvoicing(models.TransientModel):
         ]
 
     @api.model
+    def _prepare_invoice(self, data, lines):
+        # TODO replace by onchange in 12
+        vals = super(HoldingInvoicing, self)._prepare_invoice(data, lines)
+        self._apply_fiscal_position(vals, lines)
+        return vals
+
+    @api.model
     def _get_company_invoice(self, data):
         section = self.env['crm.case.section'].browse(
             data['section_id'][0])
@@ -202,17 +219,12 @@ class ChildInvoicing(models.TransientModel):
         # Refactor will be done in V10
         # for now we just read the info on the product
         # you need to set the tax by yourself
-        if self._context.get('section_group_by') == 'none':
-            name = product.name
-        else:
-            name = '%s - %s' % (
-                data_line['name'], data_line.get('client_order_ref', ''))
         taxes = product.supplier_taxes_id.filtered(
             lambda s : s.company_id.id==s._context['force_company'])
         if not taxes:
             raise UserError("Taxes configuration is missing on %s", product.name)
         return {
-            'name': name,
+            'name': product.name,
             'product_id': product.id,
             'account_id': product.property_account_expense.id,
             'invoice_line_tax_id': [(6, 0, taxes.ids)],
@@ -251,11 +263,11 @@ class ChildInvoicing(models.TransientModel):
         vals['origin'] = holding_invoice.name
         vals['partner_id'] = holding_invoice.company_id.partner_id.id
         section = self.env['crm.case.section'].browse(data['section_id'][0])
-        vals['journal_id'] = section.journal_id.id
         partner_data = self.env['account.invoice'].onchange_partner_id(
             'out_invoice', holding_invoice.company_id.partner_id.id,
             company_id=self._context['force_company'])
         vals['account_id'] = partner_data['value'].get('account_id', False)
+        self._apply_fiscal_position(vals, lines)
         return vals
 
     @api.model
