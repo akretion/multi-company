@@ -3,8 +3,6 @@
 # Sébastien BEAU <sebastien.beau@akretion.com>
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
-from openerp.addons.connector.tests.common import mock_job_delay_to_direct
-
 from .common import (
     CommonGenerateInvoice,
     XML_SECTION_1,
@@ -46,8 +44,7 @@ class TestInvoicingFromSaleTeam(CommonGenerateInvoice):
         # - that child invoice have been generated
         # - that the partner on child invoice is correct
         # - check the sale state
-        with mock_job_delay_to_direct(CHILD_JOB_PATH):
-            invoice.generate_child_invoice()
+        invoice.generate_child_invoice_job()
         self._check_child_invoice(invoice)
         self._check_child_invoice_partner(invoice)
         self.invoice = invoice
@@ -134,6 +131,22 @@ class TestInvoicingFromSaleTeam(CommonGenerateInvoice):
         self.assertEqual(self.invoice.amount_tax, 3600*0.10)
         self.assertEqual(self.child_invoice_a.amount_tax, 3000*0.9*0.10)
         self.assertEqual(self.child_invoice_b.amount_tax, 500*0.9*0.10)
+
+    def test_open_job(self):
+        self._set_partner([1, 2, 3, 4], XML_PARTNER_ID)
+        self._set_section([1, 2, 3, 4], XML_SECTION_1)
+        self._set_company([1, 2], XML_COMPANY_A)
+        self._set_company([3, 4], XML_COMPANY_B)
+
+        invoice = self._generate_holding_invoice_from_section(XML_SECTION_1)
+        invoice.signal_workflow('invoice_open')
+        res = invoice.with_context(
+            test_queue_job_no_delay=False).generate_child_invoice_job()
+        invoice._get_child_job()
+        self.assertEqual(invoice.child_invoice_job_count, 2)
+
+        action = invoice.open_child_job()
+        self.assertEqual(len(action["domain"][0][2]), 2)
 
 
 class TestInvoicingFromSaleTeamGroupBySale(TestInvoicingFromSaleTeam):

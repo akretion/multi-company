@@ -17,14 +17,13 @@
      # Note we depend of this module for having the sale_ids field
      # on the invoice
      'sale_automatic_workflow',
-     'connector',
+     'queue_job',
  ],
  'data': [
      'config/sale_config.yml',
      'views/sales_team_view.xml',
      'views/sale_view.xml',
      'views/account_invoice_view.xml',
-     'views/model_view.xml',
      'wizards/wizard_holding_invoicing_view.xml',
      'wizards/sale_make_invoice_view.xml',
      'views/product_view.xml',

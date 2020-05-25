@@ -1,2 +1,3 @@
 server-tools
 sale-workflow
+queue https://github.com/akretion/queue 8.0-backport-from-10.0

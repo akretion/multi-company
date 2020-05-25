@@ -6,7 +6,6 @@
 
 from openerp.tests.common import SavepointCase
 from datetime import datetime
-from openerp.addons.connector.tests.common import mock_job_delay_to_direct
 
 CHILD_JOB_PATH = (
     'openerp.addons.multi_company_holding_invoicing'
@@ -101,6 +100,8 @@ class CommonInvoicing(SavepointCase):
     @classmethod
     def setUpClass(cls):
         super(CommonInvoicing, cls).setUpClass()
+        cls.env = cls.env(context={"test_queue_job_no_delay": True})
+
         # tests are called before register_hook
         # register suspend_security hook
         cls.env['ir.rule']._register_hook()
