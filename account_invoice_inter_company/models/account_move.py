@@ -92,7 +92,7 @@ class AccountMove(models.Model):
         dest_invoice = self.create(dest_invoice_data)
         # create invoice lines
         dest_move_line_data = []
-        for src_line in self.invoice_line_ids:
+        for src_line in self.invoice_line_ids.filtered(lambda x: not x.display_type):
             if dest_company.company_share_product and not src_line.product_id:
                 raise UserError(
                     _(
