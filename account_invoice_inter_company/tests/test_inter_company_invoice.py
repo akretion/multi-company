@@ -33,12 +33,7 @@ class TestAccountInvoiceInterCompanyBase(SavepointCase):
         )
         cls.chart.try_loading(cls.company_a)
         cls.partner_company_a = cls.env["res.partner"].create(
-            {
-                "name": cls.company_a.name,
-                "is_company": True,
-                "company_id": cls.company_a.id,
-                "vat": "FR56465451",
-            }
+            {"name": cls.company_a.name, "is_company": True, "vat": "FR56465451"}
         )
         cls.company_a.partner_id = cls.partner_company_a
         cls.company_b = cls.env["res.company"].create(
@@ -53,12 +48,7 @@ class TestAccountInvoiceInterCompanyBase(SavepointCase):
         )
         cls.chart.try_loading(cls.company_b)
         cls.partner_company_b = cls.env["res.partner"].create(
-            {
-                "name": cls.company_b.name,
-                "is_company": True,
-                "company_id": cls.company_b.id,
-                "vat": "FR56465451",
-            }
+            {"name": cls.company_b.name, "is_company": True, "vat": "FR56465451"}
         )
         cls.child_partner_company_b = cls.env["res.partner"].create(
             {
@@ -78,7 +68,7 @@ class TestAccountInvoiceInterCompanyBase(SavepointCase):
                 "email": "usera@yourcompany.com",
                 "password": "usera_p4S$word",
                 "company_id": cls.company_a.id,
-                "company_ids": [(6, 0, [cls.company_a.id, cls.company_b.id])],
+                "company_ids": [(6, 0, [cls.company_a.id])],
                 "groups_id": [
                     (
                         6,
@@ -99,7 +89,7 @@ class TestAccountInvoiceInterCompanyBase(SavepointCase):
                 "email": "userb@yourcompany.com",
                 "password": "userb_p4S$word",
                 "company_id": cls.company_b.id,
-                "company_ids": [(6, 0, [cls.company_b.id, cls.company_a.id])],
+                "company_ids": [(6, 0, [cls.company_b.id])],
                 "groups_id": [
                     (
                         6,
