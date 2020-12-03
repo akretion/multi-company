@@ -578,6 +578,9 @@ class TestAccountInvoiceInterCompany(TestAccountInvoiceInterCompanyBase):
         self.env.ref("product.product_comp_rule").write({"active": True})
         # Product is set to a specific company
         self.product_a.write({"company_id": False})
+        # If product_multi_company is installed
+        if "company_ids" in dir(self.product_a):
+            self.product_a.write({"company_ids": [(5, 0, 0)]})
         invoices = self._confirm_invoice_with_product()
         self.assertEqual(invoices.invoice_line_ids[0].product_id, self.product_a)
 
@@ -589,6 +592,9 @@ class TestAccountInvoiceInterCompany(TestAccountInvoiceInterCompanyBase):
         self.env.ref("product.product_comp_rule").write({"active": True})
         # Product is set to a specific company
         self.product_a.write({"company_id": self.company_a.id})
+        # If product_multi_company is installed
+        if "company_ids" in dir(self.product_a):
+            self.product_a.write({"company_ids": [(6, 0, [self.company_a.id])]})
         with self.assertRaises(UserError):
             self._confirm_invoice_with_product()
 
