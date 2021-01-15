@@ -23,7 +23,7 @@ def set_security_rule(env, rule_ref):
         {
             "active": True,
             "domain_force": (
-                "['|', ('visible_for_all_companies', '=', True), ('company_ids', "
+                "[('company_ids', "
                 "'in', company_ids)]"
             ),
         }

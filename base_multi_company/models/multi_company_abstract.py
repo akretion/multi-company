@@ -20,19 +20,6 @@ class MultiCompanyAbstract(models.AbstractModel):
         comodel_name="res.company",
         default=lambda self: self._default_company_ids(),
     )
-    visible_for_all_companies = fields.Boolean(
-        compute='_compute_visible_for_all_companies',
-        store=True,
-        index=True,
-        default=True)
-
-    @api.depends('company_ids')
-    def _compute_visible_for_all_companies(self):
-        for rec in self:
-            if not rec.company_ids:
-                rec.visible_for_all_companies = True
-            else:
-                rec.visible_for_all_companies = False
 
     def _default_company_ids(self):
         return self.browse(self.env.company.ids)
