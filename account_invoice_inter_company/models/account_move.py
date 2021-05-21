@@ -1,5 +1,7 @@
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
 
+import base64
+
 from odoo import _, api, fields, models
 from odoo.exceptions import AccessError, UserError
 from odoo.tests.common import Form
@@ -115,7 +117,19 @@ class AccountMove(models.Model):
         if dest_company.invoice_auto_validation and not float_compare(
             self.amount_total, dest_invoice.amount_total, precision_digits=precision
         ):
+            pdf = self.env.ref("account.account_invoices")._render_qweb_pdf(self.id)[0]
+            attachment_invoice_pdf = self.env["ir.attachment"].create(
+                {
+                    "name": self.name + ".pdf",
+                    "type": "binary",
+                    "datas": base64.b64encode(pdf),
+                    "res_model": "account.move",
+                    "res_id": dest_invoice.id,
+                    "mimetype": "application/pdf",
+                }
+            )
             dest_invoice.action_post()
+            return attachment_invoice_pdf
         else:
             # Add warning in chatter if the total amounts are different
             if float_compare(
