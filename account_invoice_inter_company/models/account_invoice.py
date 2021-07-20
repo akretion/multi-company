@@ -252,6 +252,10 @@ class AccountInvoiceLine(models.Model):
             invoice_line.price_unit = self.price_unit
             invoice_line.discount = self.discount
             invoice_line.sequence = self.sequence
+            # Compatibility with module account_invoice_start_end_dates
+            if hasattr(self, 'start_date') and hasattr(self, 'end_date'):
+                invoice_line.start_date = self.start_date
+                invoice_line.end_date = self.end_date
         vals = dest_invoice_form._values_to_save(
             all_fields=True)['invoice_line_ids'][0][2]
         vals.update({
