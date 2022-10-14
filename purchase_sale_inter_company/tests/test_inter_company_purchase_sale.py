@@ -209,3 +209,15 @@ class TestPurchaseSaleInterCompany(TestAccountInvoiceInterCompanyBase):
         self.assertEqual(len(sale), 1)
         self.assertEqual(sale.state, "sale")
         self.assertEqual(sale.partner_id, self.partner_company_a)
+
+    def test_update_po(self):
+        self.company_b.sale_auto_validation = False
+        old_sale = self._approve_po()
+        old_sale_name = old_sale.name
+        self.purchase_company_a.button_cancel()
+        self.purchase_company_a.order_line.product_qty = 5.0
+        self.company_b.sale_auto_validation = True
+        new_sale = self._approve_po()
+        self.assertEqual(new_sale.order_line.product_uom_qty, 5.0)
+        self.assertEqual(new_sale.state, "sale")
+        self.assertEqual(new_sale.name, old_sale_name)

@@ -3,12 +3,19 @@
 # Copyright 2018-2019 Tecnativa - Carlos Dauden
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
 
-from odoo import _, models
+from odoo import _, fields, models
 from odoo.exceptions import UserError
 
 
 class PurchaseOrder(models.Model):
     _inherit = "purchase.order"
+
+    intercompany_sale_id = fields.Many2one(
+        comodel_name="sale.order",
+        string="Destination Sale Order",
+        readonly=True,
+        copy=False,
+    )
 
     def button_approve(self, force=False):
         """Generate inter company sale order base on conditions."""
@@ -81,16 +88,28 @@ class PurchaseOrder(models.Model):
                     "purchase price list currency."
                 )
             )
+        # if a sale order has already been generated
+        # delete it and force the same number
+        force_number = False
+        if self.intercompany_sale_id and self.intercompany_sale_id.state in [
+            "draft",
+            "cancel",
+        ]:
+            force_number = self.intercompany_sale_id.name
+            self.intercompany_sale_id.with_context(force_delete=True).unlink()
         # create the SO and generate its lines from the PO lines
         sale_order_data = self._prepare_sale_order_data(
             self.name, company_partner, dest_company, self.dest_address_id
         )
+        if force_number:
+            sale_order_data["name"] = force_number
         sale_order = (
             self.env["sale.order"]
             .with_user(intercompany_user.id)
             .sudo()
             .create(sale_order_data)
         )
+        self.write({"intercompany_sale_id": sale_order.id})
         for purchase_line in self.order_line:
             sale_line_data = self._prepare_sale_order_line_data(
                 purchase_line, dest_company, sale_order
@@ -175,14 +194,23 @@ class PurchaseOrder(models.Model):
         return new_line._convert_to_write(new_line._cache)
 
     def button_cancel(self):
-        sale_orders = (
-            self.env["sale.order"]
-            .sudo()
-            .search([("auto_purchase_order_id", "in", self.ids)])
-        )
-        for so in sale_orders:
-            if so.state not in ["draft", "sent", "cancel"]:
-                raise UserError(_("You can't cancel an order that is %s") % so.state)
-        sale_orders.action_cancel()
-        self.write({"partner_ref": False})
+        if self.intercompany_sale_id:
+            if self.intercompany_sale_id.state not in ["draft", "sent", "cancel"]:
+                raise UserError(
+                    _(
+                        "You can not cancel your purchase order %s.\n"
+                        "The sale order %s at your supplier %s that is linked "
+                        "to your purchase order, is in the state %s.\n"
+                        "In order to cancel your purchase order, you must first "
+                        "ask your supplier to cancel his sale order."
+                    )
+                    % (
+                        self.name,
+                        self.intercompany_sale_id.name,
+                        self.partner_id.name,
+                        self.intercompany_sale_id.state,
+                    )
+                )
+            self.intercompany_sale_id.sudo().action_cancel()
+            self.write({"partner_ref": False})
         return super().button_cancel()
