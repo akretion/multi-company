@@ -23,25 +23,30 @@ class ProductProduct(models.Model):
                 purchase = self.env["purchase.order"].browse(
                     self.env.context.get("parent_id")
                 )
-                seller_partner = purchase.partner_id.commercial_partner_id
-                seller_company = (
-                    self.env["res.company"]
-                    .sudo()
-                    .search([("partner_id", "=", seller_partner.id)])
-                )
-                if purchase and seller_company:
-                    warehouse_ids = (
-                        self.env["stock.warehouse"]
-                        .sudo()
-                        .search([("company_id", "=", seller_company.id)])
-                        .ids
-                    )
-                    qty_raw = getattr(
-                        rec.sudo().with_context({"warehouse": warehouse_ids}),
-                        self._quick_stock_level_field(),
-                    )
-                    result = rec.uom_id._compute_quantity(qty_raw, rec.quick_uom_id)
+                result = self._set_stock_level(rec, purchase)
             rec.quick_stock_level = result
+
+    def _set_stock_level(self, rec, purchase):
+        seller_partner = purchase.partner_id.commercial_partner_id
+        seller_company = (
+            self.env["res.company"]
+            .sudo()
+            .search([("partner_id", "=", seller_partner.id)])
+        )
+        if purchase and seller_company:
+            warehouse_ids = (
+                self.env["stock.warehouse"]
+                .sudo()
+                .search([("company_id", "=", seller_company.id)])
+                .ids
+            )
+            qty_raw = getattr(
+                rec.sudo().with_context({"warehouse": warehouse_ids}),
+                self._quick_stock_level_field(),
+            )
+            return rec.uom_id._compute_quantity(qty_raw, rec.quick_uom_id)
+        else:
+            return "N/A"
 
     def _default_quick_uom_id(self):
         if self.pma_parent.partner_id.origin_company_id and self.uom_intercompany_id:
