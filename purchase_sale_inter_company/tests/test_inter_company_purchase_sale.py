@@ -104,6 +104,10 @@ class TestPurchaseSaleInterCompany(TestAccountInvoiceInterCompanyBase):
             .search([("auto_purchase_order_id", "=", self.purchase_company_a.id)])
         )
 
+    def _reset_to_draft_po(self):
+        self.purchase_company_a.with_user(self.user_company_a).button_cancel()
+        self.purchase_company_a.with_user(self.user_company_a).button_draft()
+
     def test_purchase_sale_inter_company(self):
         self.purchase_company_a.notes = "Test note"
         sale = self._approve_po()
@@ -214,10 +218,21 @@ class TestPurchaseSaleInterCompany(TestAccountInvoiceInterCompanyBase):
         self.company_b.sale_auto_validation = False
         old_sale = self._approve_po()
         old_sale_name = old_sale.name
-        self.purchase_company_a.button_cancel()
+        self._reset_to_draft_po()
         self.purchase_company_a.order_line.product_qty = 5.0
-        self.company_b.sale_auto_validation = True
         new_sale = self._approve_po()
         self.assertEqual(new_sale.order_line.product_uom_qty, 5.0)
-        self.assertEqual(new_sale.state, "sale")
+        self.assertEqual(new_sale.state, "draft")
         self.assertEqual(new_sale.name, old_sale_name)
+
+    def test_update_po_with_validate_so(self):
+        sale = self._approve_po()
+        self.assertEqual(sale.state, "sale")
+        with self.assertRaises(UserError):
+            self._reset_to_draft_po()
+
+    def test_so_can_not_be_deleted(self):
+        self.company_b.sale_auto_validation = False
+        sale = self._approve_po()
+        with self.assertRaises(UserError):
+            sale.unlink()

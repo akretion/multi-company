@@ -10,9 +10,11 @@ from odoo.exceptions import UserError
 class PurchaseOrder(models.Model):
     _inherit = "purchase.order"
 
-    intercompany_sale_id = fields.Many2one(
-        comodel_name="sale.order",
-        string="Destination Sale Order",
+    # Even if it's a One2many, it's in reality a One2one
+    # sql constraint on sale order to garanti the unicity
+    intercompany_sale_id = fields.One2many(
+        "sale.order",
+        "auto_purchase_order_id",
         readonly=True,
         copy=False,
     )
@@ -88,28 +90,24 @@ class PurchaseOrder(models.Model):
                     "purchase price list currency."
                 )
             )
-        # if a sale order has already been generated
-        # delete it and force the same number
-        force_number = False
-        if self.intercompany_sale_id and self.intercompany_sale_id.state in [
-            "draft",
-            "cancel",
-        ]:
-            force_number = self.intercompany_sale_id.name
-            self.intercompany_sale_id.with_context(force_delete=True).unlink()
+
+        # Delete existing sale if needed
+        force_name = self._get_name_and_delete_existing_sale_name()
+
         # create the SO and generate its lines from the PO lines
         sale_order_data = self._prepare_sale_order_data(
             self.name, company_partner, dest_company, self.dest_address_id
         )
-        if force_number:
-            sale_order_data["name"] = force_number
+
+        if force_name:
+            sale_order_data["name"] = force_name
+
         sale_order = (
             self.env["sale.order"]
             .with_user(intercompany_user.id)
             .sudo()
             .create(sale_order_data)
         )
-        self.write({"intercompany_sale_id": sale_order.id})
         for purchase_line in self.order_line:
             sale_line_data = self._prepare_sale_order_line_data(
                 purchase_line, dest_company, sale_order
@@ -123,6 +121,18 @@ class PurchaseOrder(models.Model):
         # Validation of sale order
         if dest_company.sale_auto_validation:
             sale_order.with_user(intercompany_user.id).sudo().action_confirm()
+
+    def _get_name_and_delete_existing_sale_name(self):
+        """If a previous sale order have been generated, we update it.
+        for this we delete the existing one and create a new one.
+        This method will delete and return the name of the existing sale order"""
+        self.ensure_one()
+        if self.intercompany_sale_id:
+            if self.intercompany_sale_id.state == "cancel":
+                name = self.intercompany_sale_id.name
+                self.intercompany_sale_id.with_context(force_delete=True).unlink()
+                return name
+        return None
 
     def _prepare_sale_order_data(
         self, name, partner, dest_company, direct_delivery_address
@@ -194,8 +204,9 @@ class PurchaseOrder(models.Model):
         return new_line._convert_to_write(new_line._cache)
 
     def button_cancel(self):
-        if self.intercompany_sale_id:
-            if self.intercompany_sale_id.state not in ["draft", "sent", "cancel"]:
+        sudo_self = self.sudo()
+        if sudo_self.intercompany_sale_id:
+            if sudo_self.intercompany_sale_id.state not in ["draft", "sent", "cancel"]:
                 raise UserError(
                     _(
                         "You can not cancel your purchase order %s.\n"
@@ -205,12 +216,12 @@ class PurchaseOrder(models.Model):
                         "ask your supplier to cancel his sale order."
                     )
                     % (
-                        self.name,
-                        self.intercompany_sale_id.name,
-                        self.partner_id.name,
-                        self.intercompany_sale_id.state,
+                        sudo_self.name,
+                        sudo_self.intercompany_sale_id.name,
+                        sudo_self.partner_id.name,
+                        sudo_self.intercompany_sale_id.state,
                     )
                 )
-            self.intercompany_sale_id.sudo().action_cancel()
-            self.write({"partner_ref": False})
+            sudo_self.intercompany_sale_id.action_cancel()
+        self.write({"partner_ref": False})
         return super().button_cancel()
