@@ -18,6 +18,7 @@ org_slug: OCA
 rebel_module_groups:
 - product_tax_multicompany_default
 - stock_intercompany
+- purchase_sale_inter_company_stock_intercompany
 repo_description: Addons for the management of multi company instances as well as
 repo_name: Multi company modules
 repo_slug: multi-company
