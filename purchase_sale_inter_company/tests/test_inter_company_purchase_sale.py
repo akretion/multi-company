@@ -113,9 +113,7 @@ class TestPurchaseSaleInterCompany(TestAccountInvoiceInterCompanyBase):
         cls.company_b.warehouse_id = cls.warehouse_c
         cls.company_b.sale_auto_validation = 1
 
-        cls.intercompany_sale_user_id = cls.user_company_b.copy()
-        cls.intercompany_sale_user_id.company_ids |= cls.company_a
-        cls.company_b.intercompany_sale_user_id = cls.intercompany_sale_user_id
+from .common import TestPurchaseSaleInterCompanyCommon
 
         # Configure User
         cls._configure_user(cls.user_company_a)
@@ -197,6 +195,7 @@ class TestPurchaseSaleInterCompany(TestAccountInvoiceInterCompanyBase):
             .search([("auto_purchase_order_id", "=", purchase_id.id)])
         )
 
+class TestPurchaseSaleInterCompany(TestPurchaseSaleInterCompanyCommon):
     def test_purchase_sale_inter_company(self):
         self.purchase_company_a.notes = "Test note"
         sale = self._approve_po(self.purchase_company_a)
