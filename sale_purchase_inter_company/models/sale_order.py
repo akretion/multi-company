@@ -23,9 +23,18 @@ class SaleOrder(models.Model):
             # intercompany relation
             dest_company = sale_order.partner_id.commercial_partner_id.ref_company_ids
             if dest_company and dest_company.po_from_so:
-                sale_order.with_company(
-                    dest_company.id
-                )._inter_company_create_purchase_order(dest_company)
+                # ensure compatibility with sale_purchase_inter_company
+                # module
+                create_purchase_order = False
+                if "auto_purchase_order_id" in self._fields:
+                    if not sale_order.auto_purchase_order_id:
+                        create_purchase_order = True
+                else:
+                    create_purchase_order = True
+                if create_purchase_order:
+                    sale_order.with_company(
+                        dest_company.id
+                    )._inter_company_create_purchase_order(dest_company)
         return res
 
     def _get_user_domain(self, dest_company):
