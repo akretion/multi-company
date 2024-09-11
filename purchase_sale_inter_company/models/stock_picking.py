@@ -27,9 +27,6 @@ class StockPicking(models.Model):
             ):
                 if picking.intercompany_picking_id.state in ["confirmed", "assigned"]:
                     picking.state = "waiting"
-                else:
-                    picking.state = picking.intercompany_picking_id.state
-
         return res
 
     def _action_done(self):
