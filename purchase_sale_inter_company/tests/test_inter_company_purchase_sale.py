@@ -4,6 +4,8 @@
 # Copyright 2020 ForgeFlow S.L. (https://www.forgeflow.com)
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
 
+from dateutil.relativedelta import relativedelta
+
 from odoo.exceptions import UserError
 from odoo.tests.common import Form
 
@@ -540,3 +542,9 @@ class TestPurchaseSaleInterCompany(TestAccountInvoiceInterCompanyBase):
         self.assertEqual(new_sale.state, "sale")
         self.assertEqual(self.purchase_company_a.intercompany_sale_order_id, new_sale)
         self.assertEqual(old_sale.auto_purchase_order_id, self.purchase_company_a)
+
+    def test_change_delivery_date_sale(self):
+        sale = self._approve_po(self.purchase_company_a)
+        self.assertEqual(self.purchase_company_a.date_planned, sale.commitment_date)
+        sale.commitment_date = sale.commitment_date + relativedelta(days=3)
+        self.assertEqual(self.purchase_company_a.date_planned, sale.commitment_date)
