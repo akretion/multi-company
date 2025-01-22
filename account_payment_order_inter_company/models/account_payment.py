@@ -4,8 +4,8 @@
 from odoo import models
 
 
-class BankPaymentLine(models.Model):
-    _inherit = "bank.payment.line"
+class AccountPayment(models.Model):
+    _inherit = "account.payment"
 
     def _create_move_line_suspense_account(self, bank_journal, move, dest_company):
         vals = {
@@ -15,9 +15,9 @@ class BankPaymentLine(models.Model):
         }
         if self.payment_type == "outbound":
             vals["credit"] = 0.0
-            vals["debit"] = self.amount_currency
+            vals["debit"] = self.amount
         else:
-            vals["credit"] = self.amount_currency
+            vals["credit"] = self.amount
             vals["debit"] = 0.0
         return (
             self.env["account.move.line"]
@@ -76,13 +76,13 @@ class BankPaymentLine(models.Model):
         vals = {
             "journal_id": bank_journal.id,
             "company_id": dest_company.id,
-            "ref": self.communication,
+            "ref": self.payment_reference,
         }
         return vals
 
     def _create_move(self, dest_company, bank_journal):
         vals = self._prepare_move_vals(dest_company, bank_journal)
-        return self.env["account.move"].create(vals)
+        return self.env["account.move"].with_company(dest_company.id).create(vals)
 
     def _reconcile_lines(self, move_lines):
         for line in move_lines.filtered(

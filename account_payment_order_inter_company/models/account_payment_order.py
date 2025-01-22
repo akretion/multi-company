@@ -9,4 +9,4 @@ class AccountPaymentOrder(models.Model):
 
     def generated2uploaded(self):
         super().generated2uploaded()
-        self.bank_line_ids.sudo().reconcile_inter_company_invoices()
+        self.payment_ids.sudo().reconcile_inter_company_invoices()
