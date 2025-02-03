@@ -11,7 +11,7 @@ class AccountPayment(models.Model):
         vals = {
             "move_id": move.id,
             "company_id": dest_company.id,
-            "account_id": bank_journal.suspense_account_id.id,
+            "account_id": bank_journal.payment_debit_account_id.id,
         }
         if self.payment_type == "outbound":
             vals["credit"] = 0.0
@@ -114,14 +114,14 @@ class AccountPayment(models.Model):
                     (
                         "bank_account_id.sanitized_acc_number",
                         "=",
-                        self.partner_bank_id.sanitized_acc_number,
+                        record.partner_bank_id.sanitized_acc_number,
                     ),
                 ],
                 limit=1,
             )
             if not bank_journal:
                 continue
-            move = self._create_move(dest_company, bank_journal)
-            move_lines = self._create_move_lines(bank_journal, move, dest_company)
+            move = record._create_move(dest_company, bank_journal)
+            move_lines = record._create_move_lines(bank_journal, move, dest_company)
             move.action_post()
-            self._reconcile_lines(move_lines)
+            record._reconcile_lines(move_lines)
