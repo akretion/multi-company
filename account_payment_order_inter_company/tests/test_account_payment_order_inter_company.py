@@ -206,3 +206,23 @@ class TestAccountPaymentOrderInterCompany(TestAccountInvoiceInterCompanyBase):
         self.assertEqual(invoice_company_a.payment_state, "paid")
         # Check payment state of supplier invoice in company B
         self.assertEqual(self.invoice_company_b.payment_state, "paid")
+
+    def test_create_customer_invoice_and_pay_customer_invoice_with_draft_supplier_invoice(
+        self,
+    ):
+        # Inactive automatic validation so supplier invoice will be draft
+        self.company_b.invoice_auto_validation = False
+        # Create intercompany supplier invoice in company B
+        invoice_company_b = self._create_intercompany_supplier_invoice()
+        # Pay customer invoice in company A
+        self._pay_invoice(
+            self.invoice_company_a,
+            self.bank_journal_company_a,
+            self.payment_mode_company_a,
+            "inbound",
+            self.company_a,
+        )
+        # Check payment state of customer invoice in company A
+        self.assertEqual(self.invoice_company_a.payment_state, "paid")
+        # Check payment state of supplier invoice in company B
+        self.assertEqual(invoice_company_b.payment_state, "paid")
