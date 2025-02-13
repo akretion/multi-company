@@ -142,6 +142,7 @@ class TestAccountPaymentOrderInterCompany(TestAccountInvoiceInterCompanyBase):
         payment_order.draft2open()
         payment_order.open2generated()
         payment_order.generated2uploaded()
+        return payment_order
 
     def test_create_customer_invoice_and_pay_supplier_invoice(self):
         # Create intercompany supplier invoice in company B
@@ -213,9 +214,9 @@ class TestAccountPaymentOrderInterCompany(TestAccountInvoiceInterCompanyBase):
         # Inactive automatic validation so supplier invoice will be draft
         self.company_b.invoice_auto_validation = False
         # Create intercompany supplier invoice in company B
-        invoice_company_b = self._create_intercompany_supplier_invoice()
+        self._create_intercompany_supplier_invoice()
         # Pay customer invoice in company A
-        self._pay_invoice(
+        payment_order = self._pay_invoice(
             self.invoice_company_a,
             self.bank_journal_company_a,
             self.payment_mode_company_a,
@@ -224,5 +225,24 @@ class TestAccountPaymentOrderInterCompany(TestAccountInvoiceInterCompanyBase):
         )
         # Check payment state of customer invoice in company A
         self.assertEqual(self.invoice_company_a.payment_state, "paid")
-        # Check payment state of supplier invoice in company B
-        self.assertEqual(invoice_company_b.payment_state, "paid")
+        self.assertTrue(payment_order.payment_ids.auto_move_id)
+        self.assertFalse(
+            payment_order.payment_ids.auto_move_id.line_ids.full_reconcile_id
+        )
+
+    def test_cancel_payment_order(self):
+        invoice_company_a = self._create_intercompany_customer_invoice()
+        # Pay customer invoice in company A
+        payment_order = self._pay_invoice(
+            invoice_company_a,
+            self.bank_journal_company_a,
+            self.payment_mode_company_a,
+            "inbound",
+            self.company_a,
+        )
+        auto_move = payment_order.payment_ids.auto_move_id
+        payment_order.action_cancel()
+        self.assertEqual(auto_move.state, "cancel")
+        payment_order.cancel2draft()
+        payment_order.draft2open()
+        self.assertFalse(payment_order.payment_ids.auto_move_id)
