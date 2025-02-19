@@ -17,6 +17,8 @@ class AccountPayment(models.Model):
         vals = {
             "move_id": move.id,
             "company_id": dest_company.id,
+            "partner_id": self.company_id.partner_id.id,
+            "name": self.payment_reference,
         }
         if self.payment_type == "outbound":
             vals.update(
