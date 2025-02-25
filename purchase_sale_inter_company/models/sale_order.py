@@ -165,4 +165,5 @@ class SaleOrderLine(models.Model):
         string="Source Purchase Order Line",
         readonly=True,
         copy=False,
+        index=True,
     )
