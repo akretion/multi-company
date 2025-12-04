@@ -19,139 +19,153 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
 "X-Generator: Weblate 4.3.2\n"
 
-#. module: purchase_sale_inter_company
-#: model:ir.model,name:purchase_sale_inter_company.model_res_company
+#. module: sale_purchase_inter_company
+#: model:ir.model,name:sale_purchase_inter_company.model_res_company
 msgid "Companies"
 msgstr "Compañías"
 
-#. module: purchase_sale_inter_company
-#: model:ir.model,name:purchase_sale_inter_company.model_res_config_settings
+#. module: sale_purchase_inter_company
+#: model:ir.model,name:sale_purchase_inter_company.model_res_config_settings
 msgid "Config Settings"
 msgstr "Ajustes Configuración"
 
-#. module: purchase_sale_inter_company
-#: model:ir.model.fields,field_description:purchase_sale_inter_company.field_res_company__so_from_po
-#: model:ir.model.fields,field_description:purchase_sale_inter_company.field_res_config_settings__so_from_po
-msgid "Create Sale Orders when buying to this company"
+#. module: sale_purchase_inter_company
+#: model:ir.model.fields,field_description:sale_purchase_inter_company.field_res_company__po_from_so
+#: model:ir.model.fields,field_description:sale_purchase_inter_company.field_res_config_settings__po_from_so
+#, fuzzy
+msgid "Create Purchase Orders when selling to this company"
 msgstr "Crear pedido de venta al comprar a esta compañía"
 
-#. module: purchase_sale_inter_company
-#: model:ir.model.fields,help:purchase_sale_inter_company.field_res_company__so_from_po
-#: model:ir.model.fields,help:purchase_sale_inter_company.field_res_config_settings__so_from_po
+#. module: sale_purchase_inter_company
+#: model:ir.model.fields,help:sale_purchase_inter_company.field_res_company__po_from_so
+#: model:ir.model.fields,help:sale_purchase_inter_company.field_res_config_settings__po_from_so
+#, fuzzy
 msgid ""
-"Generate a Sale Order when a Purchase Order with this company as supplier is "
+"Generate a Purchase Order when a Sale Order with this company as customer is "
 "created.\n"
-" The intercompany user must at least be Sale User."
+" The intercompany user must at least be Purchase User."
 msgstr ""
 "Generar un pedido de venta cuando se cree un pedido de compra con esta "
 "compañía como proveedor.\n"
 "El usuario intercompañía debe ser al menos Usuario de Ventas."
 
-#. module: purchase_sale_inter_company
-#: model:ir.model.fields,field_description:purchase_sale_inter_company.field_res_company__intercompany_sale_user_id
-#: model:ir.model.fields,field_description:purchase_sale_inter_company.field_res_config_settings__intercompany_sale_user_id
-msgid "Intercompany Sale User"
+#. module: sale_purchase_inter_company
+#: model:ir.model.fields,field_description:sale_purchase_inter_company.field_res_company__intercompany_purchase_user_id
+#: model:ir.model.fields,field_description:sale_purchase_inter_company.field_res_config_settings__intercompany_purchase_user_id
+#, fuzzy
+msgid "Intercompany Purchase User"
 msgstr "Usuario de venta intercompañía"
 
-#. module: purchase_sale_inter_company
-#: model:ir.model,name:purchase_sale_inter_company.model_account_move
+#. module: sale_purchase_inter_company
+#: model:ir.model,name:sale_purchase_inter_company.model_account_move
 #, fuzzy
 msgid "Journal Entry"
 msgstr "Asientos contables"
 
-#. module: purchase_sale_inter_company
-#: model:ir.model,name:purchase_sale_inter_company.model_purchase_order
+#. module: sale_purchase_inter_company
+#: model:ir.model,name:sale_purchase_inter_company.model_purchase_order
 msgid "Purchase Order"
 msgstr "Pedido de compra"
 
-#. module: purchase_sale_inter_company
-#: model_terms:ir.ui.view,arch_db:purchase_sale_inter_company.res_config_settings_view_form
-msgid "Purchase/Sale"
-msgstr "Compra/Venta"
+#. module: sale_purchase_inter_company
+#: model:ir.model,name:sale_purchase_inter_company.model_purchase_order_line
+#, fuzzy
+msgid "Purchase Order Line"
+msgstr "Pedido de compra"
 
-#. module: purchase_sale_inter_company
-#: model:ir.model.fields,field_description:purchase_sale_inter_company.field_res_company__sale_auto_validation
-#: model:ir.model.fields,field_description:purchase_sale_inter_company.field_res_config_settings__sale_auto_validation
-msgid "Sale Orders Auto Validation"
+#. module: sale_purchase_inter_company
+#: model:ir.model.fields,field_description:sale_purchase_inter_company.field_res_company__purchase_auto_validation
+#: model:ir.model.fields,field_description:sale_purchase_inter_company.field_res_config_settings__purchase_auto_validation
+#, fuzzy
+msgid "Purchase Orders Auto Validation"
 msgstr "Auto confirmar pedidos de venta"
 
-#. module: purchase_sale_inter_company
-#: model_terms:ir.ui.view,arch_db:purchase_sale_inter_company.res_config_settings_view_form
-msgid "Sale from purchase"
+#. module: sale_purchase_inter_company
+#: model_terms:ir.ui.view,arch_db:sale_purchase_inter_company.res_config_settings_view_form
+#, fuzzy
+msgid "Purchase from sale"
+msgstr "Compra/Venta"
+
+#. module: sale_purchase_inter_company
+#: model_terms:ir.ui.view,arch_db:sale_purchase_inter_company.res_config_settings_view_form
+#, fuzzy
+msgid "Sale/Purchase"
 msgstr "Venta desde compra"
 
-#. module: purchase_sale_inter_company
-#: model:ir.model,name:purchase_sale_inter_company.model_sale_order
+#. module: sale_purchase_inter_company
+#: model:ir.model,name:sale_purchase_inter_company.model_sale_order
 msgid "Sales Order"
 msgstr "Pedido de venta"
 
-#. module: purchase_sale_inter_company
-#: model:ir.model,name:purchase_sale_inter_company.model_sale_order_line
-msgid "Sales Order Line"
-msgstr "Línea de pedido de venta"
-
-#. module: purchase_sale_inter_company
-#: model:ir.model.fields,field_description:purchase_sale_inter_company.field_sale_order__auto_purchase_order_id
-msgid "Source Purchase Order"
+#. module: sale_purchase_inter_company
+#: model:ir.model.fields,field_description:sale_purchase_inter_company.field_purchase_order__auto_sale_order_id
+#, fuzzy
+msgid "Source Sale Order"
 msgstr "Pedido de compra de origen"
 
-#. module: purchase_sale_inter_company
-#: model:ir.model.fields,field_description:purchase_sale_inter_company.field_sale_order_line__auto_purchase_line_id
-msgid "Source Purchase Order Line"
+#. module: sale_purchase_inter_company
+#: model:ir.model.fields,field_description:sale_purchase_inter_company.field_purchase_order_line__auto_sale_line_id
+#, fuzzy
+msgid "Source Sale Order Line"
 msgstr "Línea pedido de compra origen"
 
-#. module: purchase_sale_inter_company
-#: code:addons/purchase_sale_inter_company/models/account_move.py:0
-#, python-format
-msgid "This vendor bill is related with: {}"
-msgstr ""
+#. module: sale_purchase_inter_company
+#. odoo-python
+#: code:addons/sale_purchase_inter_company/models/account_move.py:0
+#, fuzzy, python-format
+msgid "This customer bill is related with: {}"
+msgstr "Esta factura de proveedor está relacionada con: %s"
 
-#. module: purchase_sale_inter_company
-#: model:ir.model.fields,help:purchase_sale_inter_company.field_res_config_settings__intercompany_sale_user_id
+#. module: sale_purchase_inter_company
+#: model:ir.model.fields,help:sale_purchase_inter_company.field_res_config_settings__intercompany_purchase_user_id
+#, fuzzy
 msgid ""
-"User used to create the sales order arising from a purchase order in another "
+"User used to create the Purchase order arising from a sale order in another "
 "company."
 msgstr ""
 "El usuario solía crear los pedidos de venta que surgen de un pedido de "
 "compra en otra compañía."
 
-#. module: purchase_sale_inter_company
-#: model:ir.model.fields,help:purchase_sale_inter_company.field_res_company__sale_auto_validation
-#: model:ir.model.fields,help:purchase_sale_inter_company.field_res_config_settings__sale_auto_validation
+#. module: sale_purchase_inter_company
+#: model:ir.model.fields,help:sale_purchase_inter_company.field_res_company__purchase_auto_validation
+#: model:ir.model.fields,help:sale_purchase_inter_company.field_res_config_settings__purchase_auto_validation
+#, fuzzy
 msgid ""
-"When a Sale Order is created by a multi company rule for this company, it "
-"will automatically validate it."
+"When a Purchase Order is created by a multi company rule for this company, "
+"it will automatically validate it."
 msgstr ""
 "Cuando un pedido de venta es creado por una regla intercompañía para esta "
 "compañía, este sera confirmado automáticamente."
 
-#. module: purchase_sale_inter_company
-#: code:addons/purchase_sale_inter_company/models/purchase_order.py:0
+#. module: sale_purchase_inter_company
+#. odoo-python
+#: code:addons/sale_purchase_inter_company/models/sale_order.py:0
 #, python-format
 msgid "You can't cancel an order that is %s"
 msgstr "No puede cancelar un pedido que es %s"
 
-#. module: purchase_sale_inter_company
-#: code:addons/purchase_sale_inter_company/models/purchase_order.py:0
-#, python-format
-msgid "You cannot create SO from PO because product '%s' is not intercompany"
+#. module: sale_purchase_inter_company
+#. odoo-python
+#: code:addons/sale_purchase_inter_company/models/sale_order.py:0
+#, fuzzy, python-format
+msgid "You cannot create PO from SO because product '%s' is not intercompany"
 msgstr ""
 "No puede crear pedido de venta desde pedido de compra porque el producto "
 "'%s' no es intercompañía"
 
-#. module: purchase_sale_inter_company
-#: code:addons/purchase_sale_inter_company/models/purchase_order.py:0
-#, python-format
+#. module: sale_purchase_inter_company
+#. odoo-python
+#: code:addons/sale_purchase_inter_company/models/sale_order.py:0
+#, fuzzy, python-format
 msgid ""
-"You cannot create SO from PO because sale price list currency is different "
-"than purchase price list currency."
+"You cannot create PO from SO because purchase price list currency is "
+"different than sale price list currency."
 msgstr ""
 "No puede crear pedido de venta desde pedido de compra porque la moneda de la "
 "tarifa de venta es distinta de la moneda de la tarifa de compra."
 
-#, fuzzy, python-format
-#~ msgid "This vendor bill is related with: %s"
-#~ msgstr "Esta factura de proveedor está relacionada con: %s"
+#~ msgid "Sales Order Line"
+#~ msgstr "Línea de pedido de venta"
 
 #~ msgid ""
 #~ "Default value to set on Sale Orders that will be created based on "
