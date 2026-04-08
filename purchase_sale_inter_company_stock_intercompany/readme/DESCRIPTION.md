@@ -1,2 +1,2 @@
-Compatibility module for Purchase Sale Inter Company and Stock
+Compatibility module for Purchase Sale Stock Inter Company and Stock
 Intercompany

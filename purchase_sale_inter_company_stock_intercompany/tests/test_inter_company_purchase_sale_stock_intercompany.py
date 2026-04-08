@@ -1,11 +1,16 @@
-from odoo.addons.purchase_sale_inter_company.tests.common import (
-    TestPurchaseSaleInterCompanyCommon,
+from odoo.addons.purchase_sale_stock_inter_company.tests import (
+    test_inter_company_purchase_sale_stock as test_icpss,
 )
-from odoo.addons.stock_intercompany.tests.common import TestStockIntercompanyCommon
+from odoo.addons.stock_intercompany.tests import (
+    test_intercompany_picking as test_si,
+)
+
+TestPurchaseSaleStockInterCompany = test_icpss.TestPurchaseSaleStockInterCompany
+TestIntercompanyDelivery = test_si.TestIntercompanyDelivery
 
 
 class TestInterCompanyPurchaseSaleStockIntercompany(
-    TestStockIntercompanyCommon, TestPurchaseSaleInterCompanyCommon
+    TestIntercompanyDelivery, TestPurchaseSaleStockInterCompany
 ):
     def test_sync_picking_avoid_duplicate_in(self):
         self.company_a.intercompany_picking_creation_mode = "both"

@@ -15,7 +15,7 @@ class StockPicking(models.Model):
         return super()._check_intercompany_company(company, mode)
 
     def _create_counterpart_picking(self, mode):
-        # Skip linked pickings from purchase sale inter company
+        # Skip linked pickings from purchase sale stock inter company
         if self.intercompany_picking_id:
             return
 
@@ -31,7 +31,7 @@ class StockPicking(models.Model):
         domain += [
             "|",
             ("purchase_id", "=", False),
-            ("partner_id", "not in", so_from_po_companies.mapped("partner_id").ids),
+            ("partner_id", "not in", so_from_po_companies.partner_id.ids),
         ]
 
         return domain

@@ -1,6 +1,6 @@
-===========================================================================
-Compatibility module for Purchase Sale Inter Company and Stock Intercompany
-===========================================================================
+=================================================================================
+Compatibility module for Purchase Sale Stock Inter Company and Stock Intercompany
+=================================================================================
 
 .. 
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -28,7 +28,7 @@ Compatibility module for Purchase Sale Inter Company and Stock Intercompany
 
 |badge1| |badge2| |badge3| |badge4| |badge5|
 
-Compatibility module for Purchase Sale Inter Company and Stock
+Compatibility module for Purchase Sale Stock Inter Company and Stock
 Intercompany
 
 **Table of contents**
