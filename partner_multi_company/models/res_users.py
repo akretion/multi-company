@@ -9,7 +9,9 @@ class ResUsers(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
-        users = super().create(vals_list)
+        users = super(
+            ResUsers, self.with_context(bypass_multicompany_check=True)
+        ).create(vals_list)
         for user in users:
             # The new user might have a company even if it was not in `vals`
             # because of defaults for example.

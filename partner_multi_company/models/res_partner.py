@@ -54,6 +54,8 @@ class ResPartner(models.Model):
 
     @api.constrains("company_ids")
     def _check_company_id(self):
+        if self.env.context.get("bypass_multicompany_check"):
+            return
         for rec in self:
             if rec.user_ids:
                 user_company_ids = set(rec.user_ids.mapped("company_ids").ids)
