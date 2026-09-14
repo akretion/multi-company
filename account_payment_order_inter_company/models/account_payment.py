@@ -95,21 +95,24 @@ class AccountPayment(models.Model):
 
         return vals
 
+    def _get_dest_invoice(self, payment_line, dest_company):
+        orig_invoice = payment_line.move_line_id.move_id
+        if orig_invoice.auto_generated:
+            return orig_invoice.auto_invoice_id
+        else:
+            return self.env["account.move"].search(
+                [
+                    ("auto_invoice_id", "=", orig_invoice.id),
+                    ("company_id", "=", dest_company.id),
+                ],
+                limit=1,
+            )
+
     def _create_move_lines(self, bank_journal, move, dest_company):
         self._create_move_line_pending_account(bank_journal, move, dest_company)
         move_lines = []
         for payment_line in self.payment_line_ids:
-            orig_invoice = payment_line.move_line_id.move_id
-            if orig_invoice.auto_generated:
-                dest_invoice = orig_invoice.auto_invoice_id
-            else:
-                dest_invoice = self.env["account.move"].search(
-                    [
-                        ("auto_invoice_id", "=", orig_invoice.id),
-                        ("company_id", "=", dest_company.id),
-                    ],
-                    limit=1,
-                )
+            dest_invoice = self._get_dest_invoice(payment_line, dest_company)
             move_line_vals = self._prepare_move_line_vals(
                 payment_line, dest_invoice, move, dest_company
             )
