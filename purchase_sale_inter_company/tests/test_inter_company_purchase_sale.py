@@ -536,6 +536,40 @@ class TestPurchaseSaleInterCompany(TestAccountInvoiceInterCompanyBase):
         self.assertEqual(len(sale.picking_ids), 1)
         self.assertEqual(len(purchase.picking_ids), len(sale.picking_ids))
 
+    def test_sync_picking_second_partial_delivery(self):
+        self.company_a.sync_picking = True
+        self.company_b.sync_picking = True
+        purchase = self._create_purchase_order(
+            self.partner_company_b, self.consumable_product
+        )
+        sale = self._approve_po(purchase)
+        first_receipt = purchase.picking_ids
+        first_delivery = sale.picking_ids
+        first_delivery.move_lines.quantity_done = 1
+        wizard_data = first_delivery.with_user(self.user_company_b).button_validate()
+        self.env["stock.backorder.confirmation"].with_context(
+            **wizard_data.get("context")
+        ).create({}).process()
+        second_delivery = sale.picking_ids - first_delivery
+        second_receipt = purchase.picking_ids - first_receipt
+        second_delivery.move_lines.quantity_done = 2
+        second_delivery.with_user(self.user_company_b).button_validate()
+        self.assertEqual(first_receipt.move_lines.quantity_done, 1)
+        self.assertEqual(second_receipt.state, "done")
+        self.assertEqual(second_receipt.move_lines.quantity_done, 2)
+        self.assertEqual(second_delivery.intercompany_picking_id, second_receipt)
+
+    def test_receipt_state_not_copied_from_delivery(self):
+        purchase = self._create_purchase_order(
+            self.partner_company_b, self.consumable_product
+        )
+        sale = self._approve_po(purchase)
+        delivery = sale.picking_ids
+        delivery.move_lines.quantity_done = 3
+        delivery.with_user(self.user_company_b).button_validate()
+        self.assertEqual(delivery.state, "done")
+        self.assertEqual(purchase.picking_ids.state, "assigned")
+
     def test_sync_picking_lot(self):
         """
         Test that the lot is synchronized on the moves
