@@ -1,1 +1,2 @@
 odoo-test-helper>=1.1.0
+odoo14-addon-purchase_stock_transit_receipt @ git+https://github.com/akretion/purchase-workflow.git@14.0-add-purchase_stock_transit_receipt#subdirectory=setup/purchase_stock_transit_receipt
