@@ -1,0 +1,1 @@
+from . import test_purchase_sale_inter_company_transit_receipt
