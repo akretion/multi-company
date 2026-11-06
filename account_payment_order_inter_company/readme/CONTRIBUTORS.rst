@@ -1,2 +1,3 @@
 * Sébastien Beau <sebastien.beau@akretion.com>
 * Chafique Delli <chafique.delli@akretion.com>
+* Guillaume Masson <guillaume.masson@akretion.com>

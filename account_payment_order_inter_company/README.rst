@@ -1,3 +1,7 @@
+.. image:: https://odoo-community.org/readme-banner-image
+   :target: https://odoo-community.org/get-involved?utm_source=readme
+   :alt: Odoo Community Association
+
 ===================================
 Account Payment Order Inter Company
 ===================================
@@ -13,7 +17,7 @@ Account Payment Order Inter Company
 .. |badge1| image:: https://img.shields.io/badge/maturity-Beta-yellow.png
     :target: https://odoo-community.org/page/development-status
     :alt: Beta
-.. |badge2| image:: https://img.shields.io/badge/licence-AGPL--3-blue.png
+.. |badge2| image:: https://img.shields.io/badge/license-AGPL--3-blue.png
     :target: http://www.gnu.org/licenses/agpl-3.0-standalone.html
     :alt: License: AGPL-3
 .. |badge3| image:: https://img.shields.io/badge/github-OCA%2Fmulti--company-lightgray.png?logo=github
@@ -29,6 +33,21 @@ Account Payment Order Inter Company
 |badge1| |badge2| |badge3| |badge4| |badge5|
 
 This module allows for an inter-company billing to automatically pay the invoice in Company A as soon as the invoice in Company B is paid.
+
+The mirror entry is booked at upload in the company receiving the payment:
+one line per payment line on the account of the linked inter-company invoice,
+reconciled with it, and the net amount on the outstanding receipts (or payments)
+account of its bank journal.
+
+On a multi-installment invoice, each payment line is paired with the installment
+of the linked invoice at the same position, by due date.
+
+A linked invoice of another company than the receiving one counts as no link.
+A payment line without linked invoice is booked on the partner's receivable or
+payable account and left unreconciled, with a message on the payment order. A line
+whose linked invoice is not posted or has a different number of installments, or
+whose installment is already fully paid, is booked on the account of that invoice
+and left unreconciled, with the same message.
 
 **Table of contents**
 
@@ -58,6 +77,7 @@ Contributors
 
 * Sébastien Beau <sebastien.beau@akretion.com>
 * Chafique Delli <chafique.delli@akretion.com>
+* Guillaume Masson <guillaume.masson@akretion.com>
 
 Maintainers
 ~~~~~~~~~~~
