@@ -117,6 +117,11 @@ class TestPurchaseSaleStockInterCompanyMrp(TestPurchaseSaleInterCompany):
         interco_location = self.env.ref("stock.stock_location_inter_company")
         self.company_a._set_per_company_inter_company_locations(interco_location)
 
+    def _add_stock_user(self, *users):
+        group = self.env.ref("stock.group_stock_user")
+        for user in users:
+            user.groups_id |= group
+
     def _get_return_wizard(self, sale_picking):
         return self.env["stock.return.picking"].create({"picking_id": sale_picking.id})
 
@@ -323,8 +328,9 @@ class TestPurchaseSaleStockInterCompanyMrp(TestPurchaseSaleInterCompany):
         )
 
     def test_purchase_kit_validated_by_sale_user(self):
+        """A sale user can validate the delivery and sync the receipt."""
         self.bom.write({"company_id": self.company_a.id})
-        self.user_company_b.groups_id |= self.env.ref("stock.group_stock_user")
+        self._add_stock_user(self.user_company_b)
         sale_picking = self._approve_kit_po().with_user(self.user_company_b)
         sale_picking.move_ids._set_quantity_done(2.0)
         self._validate_without_backorder(sale_picking)
@@ -628,19 +634,17 @@ class TestPurchaseSaleStockInterCompanyMrp(TestPurchaseSaleInterCompany):
         )
 
     def test_purchase_kit_return_by_sale_user(self):
+        """A sale user without access to the purchasing company can return
+        an inter-company kit delivery."""
         self._enable_sync_picking()
         self.bom.write({"company_id": self.company_a.id})
         sale_picking = self._approve_kit_po()
         sale_picking.move_ids._set_quantity_done(3.0)
         sale_picking.button_validate()
-        stock_user_group = self.env.ref("stock.group_stock_user")
-        self.user_company_b.groups_id |= stock_user_group
-        self.intercompany_sale_user_id.write(
-            {
-                "groups_id": [Command.link(stock_user_group.id)],
-                "email": "ic@example.com",
-            }
-        )
+        self._add_stock_user(self.user_company_b, self.intercompany_sale_user_id)
+        # The purchase return is created by the inter-company user, whose
+        # email is required to post the return message.
+        self.intercompany_sale_user_id.email = "ic@example.com"
         self.company_a.intercompany_sale_user_id = self.intercompany_sale_user_id
         return_wizard = (
             self.env["stock.return.picking"]
