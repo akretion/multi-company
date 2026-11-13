@@ -659,6 +659,24 @@ class TestPurchaseSaleStockInterCompanyMrp(TestPurchaseSaleInterCompany):
             purchase_return, {self.component_1: 9.0, self.component_2: 6.0}
         )
 
+    def test_purchase_kit_return_after_backorder(self):
+        """A kit return after a partial delivery must use the delivered
+        quantities, not the backorder demand."""
+        self._enable_sync_picking()
+        self.bom.write({"company_id": self.company_a.id})
+        sale_picking = self._approve_kit_po()
+        sale_picking.move_ids._set_quantity_done(2.0)
+        # Keep the backorder: the receipt is partially done.
+        sale_picking.with_context(skip_backorder=True).button_validate()
+        purchase_picking = self.kit_po.picking_ids[0]
+        expected = {self.component_1: 2.0, self.component_2: 4.0}
+        self._assert_quantities(purchase_picking, expected)
+        sale_return, purchase_return = self._create_returns(sale_picking)
+        self._assert_quantities(purchase_return, expected, "product_uom_qty")
+        self._set_return_done(sale_return)
+        sale_return.button_validate()
+        self._assert_quantities(purchase_return, expected)
+
     def test_purchase_kit_return_by_sale_user(self):
         """A sale user without access to the purchasing company can return
         an inter-company kit delivery."""
