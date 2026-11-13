@@ -9,6 +9,8 @@ extends the functionality by automatically validating the corresponding inter-co
 receipts when the Delivery Order is confirmed. During this process, lot/serial numbers
 and quantities are synchronized to ensure consistency across companies.
 
+The picking synchronisation only works validating the Delivery Order on the Sale Order side, not on the Purchase Side.
+
 The configuration includes an option to specify a default Warehouse that will be
 automatically assigned to Sale Orders generated from Purchase Orders addressed to
 this company.
@@ -16,3 +18,5 @@ this company.
 When Company A sends a product tracked by lot or serial number, a new
 lot/serial number with the same name is created in Company B to match
 it, if one doesn't already exist.
+
+Picking returns are also managed, when creating a return on the Sale Order side, the return on the Purchase side is automatically created (but not validated).

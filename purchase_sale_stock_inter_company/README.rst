@@ -1,7 +1,3 @@
-.. image:: https://odoo-community.org/readme-banner-image
-   :target: https://odoo-community.org/get-involved?utm_source=readme
-   :alt: Odoo Community Association
-
 ==============================================================
 Inter Company Module for Purchase to Sale Order with warehouse
 ==============================================================
@@ -17,7 +13,7 @@ Inter Company Module for Purchase to Sale Order with warehouse
 .. |badge1| image:: https://img.shields.io/badge/maturity-Beta-yellow.png
     :target: https://odoo-community.org/page/development-status
     :alt: Beta
-.. |badge2| image:: https://img.shields.io/badge/license-AGPL--3-blue.png
+.. |badge2| image:: https://img.shields.io/badge/licence-AGPL--3-blue.png
     :target: http://www.gnu.org/licenses/agpl-3.0-standalone.html
     :alt: License: AGPL-3
 .. |badge3| image:: https://img.shields.io/badge/github-OCA%2Fmulti--company-lightgray.png?logo=github
@@ -44,6 +40,9 @@ validating the corresponding inter-company receipts when the Delivery
 Order is confirmed. During this process, lot/serial numbers and
 quantities are synchronized to ensure consistency across companies.
 
+The picking synchronisation only works validating the Delivery Order on
+the Sale Order side, not on the Purchase Side.
+
 The configuration includes an option to specify a default Warehouse that
 will be automatically assigned to Sale Orders generated from Purchase
 Orders addressed to this company.
@@ -51,6 +50,10 @@ Orders addressed to this company.
 When Company A sends a product tracked by lot or serial number, a new
 lot/serial number with the same name is created in Company B to match
 it, if one doesn't already exist.
+
+Picking returns are also managed, when creating a return on the Sale
+Order side, the return on the Purchase side is automatically created
+(but not validated).
 
 **Table of contents**
 
@@ -128,7 +131,8 @@ Contributors
   - Francesco Foresti <francesco.foresti@ooops404.com>
 
 - Eduard Brahas <eduardbrhas@outlook.it>
-- \`Komit <https://komit-consulting.com>\`:
+- \`Komit
+  <`https://komit-consulting.com\\>\\\` <https://komit-consulting.com\>\`>`__:
 
   - Cuong Nguyen Mtm <cuong.nmtm@komit-consulting.com>
   - Nam TNT <nam-tnt@komit-consulting.com>
