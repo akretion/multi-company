@@ -299,6 +299,16 @@ class TestPurchaseSaleStockInterCompanyMrp(TestPurchaseSaleInterCompany):
         purchase_picking = self.kit_po.picking_ids[0]
         self.assertEqual(purchase_picking.move_ids.quantity, 0.0)
 
+    def test_kit_sync_quantity_overflow(self):
+        """Synchronizing more kits than the purchase demand must raise."""
+        self.bom.write({"company_id": self.company_a.id})
+        sale_picking = self._approve_kit_po()
+        sale_picking.move_ids._set_quantity_done(4.0)
+        self._assert_user_error(
+            lambda: self._validate_without_backorder(sale_picking),
+            "greater than the pending demand",
+        )
+
     def test_purchase_kit_partial(self):
         self.bom.write({"company_id": self.company_a.id})
         sale_picking = self._approve_kit_po()
