@@ -2,6 +2,8 @@
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
 
 from odoo import models
+from odoo.exceptions import UserError
+from odoo.tools import float_compare
 
 
 class StockPicking(models.Model):
@@ -68,13 +70,24 @@ class StockPicking(models.Model):
             )
             sign = -1 if self._is_intercompany_return_reception() else 1
             for bom_line, moves in purchase_moves.grouped("bom_line_id").items():
-                moves._set_intercompany_qty_done(
-                    sign
-                    * (
-                        qty_delivered_by_bom_line[bom_line]
-                        - qty_received_by_bom_line.get(bom_line, 0.0)
-                    )
+                qty = sign * (
+                    qty_delivered_by_bom_line[bom_line]
+                    - qty_received_by_bom_line.get(bom_line, 0.0)
                 )
+                rounding = moves.product_id.uom_id.rounding
+                # Defensive check, only reachable with inconsistent manual
+                # data: the normal flows keep the purchase side in sync.
+                if float_compare(qty, 0.0, precision_rounding=rounding) < 0:
+                    raise UserError(
+                        self.env._(
+                            "The kit quantities of %(products)s cannot be "
+                            "synchronized: the quantity to set is negative, "
+                            "the purchase side already has more quantity than "
+                            "the sale side.",
+                            products=", ".join(moves.product_id.mapped("display_name")),
+                        )
+                    )
+                moves._set_intercompany_qty_done(qty)
             kit_moves |= sale_moves
         return kit_moves
 
