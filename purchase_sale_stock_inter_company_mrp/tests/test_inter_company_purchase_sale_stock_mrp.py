@@ -248,14 +248,27 @@ class TestPurchaseSaleStockInterCompanyMrp(TestPurchaseSaleInterCompany):
         )
 
     def test_sale_kit_components_split_over_backorder(self):
+        """A kit split over a backorder must sync the cumulative quantities.
+
+        The first delivery makes one whole kit, so its receipt is done at 1
+        and the receipt backorder receives the 2 remaining kits.
+        """
         self._enable_sync_picking()
         sale_picking = self._approve_kit_po()
         self._set_done(sale_picking, {self.component_1: 3.0, self.component_2: 2.0})
         sale_picking.with_context(skip_backorder=True).button_validate()
         backorder = sale_picking.backorder_ids
         self.assertEqual(backorder.move_ids.product_id, self.component_2)
+        purchase_picking = self.kit_po.picking_ids.filtered(
+            lambda picking: picking.state == "done"
+        )
+        purchase_backorder = self.kit_po.picking_ids - purchase_picking
+        # 3 component_1 and 2 component_2 make one whole kit.
+        self.assertAlmostEqual(purchase_picking.move_ids.quantity, 1.0)
+        self.assertAlmostEqual(purchase_backorder.move_ids.product_uom_qty, 2.0)
         self._set_done(backorder, {self.component_2: 4.0})
         backorder.button_validate()
+        self.assertAlmostEqual(purchase_backorder.move_ids.quantity, 2.0)
         self.assertEqual(self.kit_po.order_line.qty_received, 3.0)
 
     def test_sale_kit_two_pending_receipt_moves(self):
