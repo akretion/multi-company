@@ -8,6 +8,7 @@ class MrpBom(models.Model):
     _inherit = "mrp.bom"
 
     def _explode_intercompany_kit(self, product, kit_qty):
+        """Return the components with their quantity in product UoM."""
         bom_qty = product.uom_id._compute_quantity(kit_qty, self.product_uom_id)
         _, bom_lines = self.explode(product, bom_qty / self.product_qty)
         return {

@@ -41,9 +41,8 @@ class StockMove(models.Model):
         )[product]
         if not bom:
             self._raise_intercompany_kit_bom_changed(self.product_id)
-        _, bom_lines = bom.explode(product, 1)
         self._check_intercompany_kit_bom_changed(
-            {bom_line: bom_line_data["qty"] for bom_line, bom_line_data in bom_lines}
+            bom._explode_intercompany_kit(product, 1)
         )
         return bom
 
@@ -143,7 +142,8 @@ class StockMove(models.Model):
             line.id
             for line in consu_lines
             if not float_is_zero(
-                qty_by_bom_line[line], precision_rounding=line.product_uom_id.rounding
+                qty_by_bom_line[line],
+                precision_rounding=line.product_id.uom_id.rounding,
             )
         }
         stale_moves = self.filtered(lambda m: m.bom_line_id.id not in bom_line_ids)
