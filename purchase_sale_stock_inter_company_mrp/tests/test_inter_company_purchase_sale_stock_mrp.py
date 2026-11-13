@@ -677,6 +677,33 @@ class TestPurchaseSaleStockInterCompanyMrp(TestPurchaseSaleInterCompany):
         sale_return.button_validate()
         self._assert_quantities(purchase_return, expected)
 
+    def test_sale_kit_return_order_in_dozens(self):
+        """The kit return must work when ``stock.propagate_uom`` is set.
+
+        In that case the move UoM is the order line UoM, which differs from
+        the product UoM.
+        """
+        self.env["ir.config_parameter"].sudo().set_param("stock.propagate_uom", "1")
+        self._enable_sync_picking()
+        self.kit_po.order_line.write(
+            {
+                "product_uom": self.env.ref("uom.product_uom_dozen").id,
+                "product_qty": 2,
+            }
+        )
+        sale_picking = self._approve_kit_po()
+        self._set_done(sale_picking, {self.component_1: 24.0, self.component_2: 48.0})
+        sale_picking.button_validate()
+        # Return half of the two dozens, i.e. 12 kits.
+        sale_return, purchase_return = self._create_returns(
+            sale_picking, quantities={self.component_1: 12.0, self.component_2: 24.0}
+        )
+        self.assertEqual(purchase_return.move_ids.product_id, self.kit_product)
+        self.assertAlmostEqual(purchase_return.move_ids.product_uom_qty, 12.0)
+        self._set_return_done(sale_return)
+        sale_return.button_validate()
+        self.assertAlmostEqual(purchase_return.move_ids.quantity, 12.0)
+
     def test_purchase_kit_return_by_sale_user(self):
         """A sale user without access to the purchasing company can return
         an inter-company kit delivery."""
