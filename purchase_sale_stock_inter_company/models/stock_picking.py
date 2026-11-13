@@ -91,9 +91,12 @@ class StockPicking(models.Model):
             po_picking_pending = purchase.picking_ids.filtered(
                 lambda x: x.state not in ["done", "cancel"]
             )
-            po_picking_pending.intercompany_picking_id = self.id
-            if not self.intercompany_picking_id and po_picking_pending:
-                self.intercompany_picking_id = po_picking_pending[0]
+            # Delivery return pickings already have their counterpart return
+            # linked when both returns are created.
+            if not self.return_id:
+                po_picking_pending.intercompany_picking_id = self.id
+                if not self.intercompany_picking_id and po_picking_pending:
+                    self.intercompany_picking_id = po_picking_pending[0]
             purchase_picking = self.intercompany_picking_id.with_user(
                 intercompany_user
             ).with_company(purchase_company)

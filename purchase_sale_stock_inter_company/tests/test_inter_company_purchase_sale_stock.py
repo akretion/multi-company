@@ -821,3 +821,37 @@ class TestPurchaseSaleStockInterCompany(TestPurchaseSaleStockInterCompanyCommon)
         po_return2_lots = po_return2.move_line_ids.lot_id
         self.assertEqual(so_return2_lots, po_return2_lots)
         self.assertEqual(self.serial_3, so_return2_lots)
+
+    def test_return_after_partial_delivery(self):
+        """A return of a partially delivered order must be synchronized on the
+        purchase return picking, not on the receipt backorder."""
+        self.product.type = "consu"
+        self.company_a.sync_picking = True
+        sale = self._approve_po()
+        sale_picking = sale.picking_ids[0]
+        # Deliver one unit and keep a backorder for the two others.
+        sale_picking.move_ids.quantity = 1.0
+        sale_picking.move_ids.picked = True
+        sale_picking.with_context(skip_backorder=True).button_validate()
+        purchase_picking = self.purchase_company_a.picking_ids.filtered(
+            lambda picking: picking.state == "done"
+        )
+        purchase_backorder = self.purchase_company_a.picking_ids - purchase_picking
+        self.assertEqual(purchase_picking.move_ids.quantity, 1.0)
+        self.assertEqual(purchase_backorder.move_ids.product_uom_qty, 2.0)
+        # Return the delivered unit.
+        return_wizard = self.env["stock.return.picking"].create(
+            {"picking_id": sale_picking.id}
+        )
+        action = return_wizard.action_create_returns_all()
+        sale_return = self.env["stock.picking"].browse(action["res_id"])
+        purchase_return = purchase_picking.return_ids
+        self.assertEqual(purchase_return.move_ids.product_uom_qty, 1.0)
+        sale_return.button_validate()
+        self.assertEqual(sale_return.state, "done")
+        self.assertEqual(purchase_return.state, "done")
+        self.assertEqual(purchase_return.move_ids.quantity, 1.0)
+        # The receipt backorder must not receive the return quantities.
+        self.assertNotIn(purchase_backorder.state, ["done", "cancel"])
+        self.assertEqual(purchase_backorder.move_ids.product_uom_qty, 2.0)
+        self.assertEqual(purchase_backorder.move_ids.quantity, 2.0)

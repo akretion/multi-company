@@ -12,9 +12,13 @@ class ReturnPicking(models.TransientModel):
             purchase_return_wizard = self._create_intercompany_return_wizard(
                 new_picking
             )
-            purchase_return_wizard.with_context(
+            purchase_return_picking = purchase_return_wizard.with_context(
                 skip_create_returns=True
             )._create_return()
+            # Link both returns so the quantities are synchronized on the
+            # counterpart return picking, not on a pending receipt.
+            new_picking.intercompany_picking_id = purchase_return_picking
+            purchase_return_picking.intercompany_picking_id = new_picking
         return new_picking
 
     def _should_create_intercompany_return(self):
