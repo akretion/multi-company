@@ -7,7 +7,7 @@ from odoo import models
 class StockPicking(models.Model):
     _inherit = "stock.picking"
 
-    def _set_intercompany_kit_quantities_done(self, purchase, dest_picking):
+    def _set_intercompany_kit_quantities_done(self, purchase, purchase_picking):
         """Define the kit quantities received on the reception picking.
 
         Kits are handled here because the sale and purchase sides may have
@@ -33,11 +33,11 @@ class StockPicking(models.Model):
         UoM used to decompose them may differ.
         """
         kit_moves = super()._set_intercompany_kit_quantities_done(
-            purchase, dest_picking
+            purchase, purchase_picking
         )
         for sale_line, sale_moves in self.move_ids.grouped("sale_line_id").items():
             purchase_moves = self._get_intercompany_purchase_pending_moves(
-                sale_line, dest_picking
+                sale_line, purchase_picking
             )
             if not purchase_moves:
                 continue
@@ -56,11 +56,13 @@ class StockPicking(models.Model):
                 sale_line, sale_bom
             )
             if purchase_bom:
-                qty_by_bom_line = purchase_bom._explode_intercompany_kit(
+                qty_delivered_by_bom_line = purchase_bom._explode_intercompany_kit(
                     product, kit_qty_delivered
                 )
             else:
-                qty_by_bom_line = {self.env["mrp.bom.line"]: kit_qty_delivered}
+                qty_delivered_by_bom_line = {
+                    self.env["mrp.bom.line"]: kit_qty_delivered
+                }
             qty_received_by_bom_line = (
                 purchase_line.move_ids._get_intercompany_qty_received_by_bom_line()
             )
@@ -69,16 +71,16 @@ class StockPicking(models.Model):
                 moves._set_intercompany_qty_done(
                     sign
                     * (
-                        qty_by_bom_line[bom_line]
+                        qty_delivered_by_bom_line[bom_line]
                         - qty_received_by_bom_line.get(bom_line, 0.0)
                     )
                 )
             kit_moves |= sale_moves
         return kit_moves
 
-    def _get_intercompany_purchase_pending_moves(self, sale_line, dest_picking):
+    def _get_intercompany_purchase_pending_moves(self, sale_line, purchase_picking):
         """Return the pending moves of the destination picking for the sale line."""
         return sale_line.auto_purchase_line_id.move_ids.filtered(
-            lambda x, dp=dest_picking: x.picking_id == dp
+            lambda x, dp=purchase_picking: x.picking_id == dp
             and x.state not in ["done", "cancel"]
         )
