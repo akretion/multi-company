@@ -261,13 +261,26 @@ class TestPurchaseSaleStockInterCompanyMrp(TestPurchaseSaleInterCompany):
     def test_sale_kit_two_pending_receipt_moves(self):
         sale_picking = self._approve_kit_po()
         purchase_move = self.kit_po.picking_ids[0].move_ids
-        purchase_move.product_uom_qty = 2.0
-        purchase_move.copy({"product_uom_qty": 1.0})._action_confirm(merge=False)
+        # Split the purchase move: 0.2 box (2 units) in a different UoM,
+        # and 1 unit in the product UoM.
+        purchase_move.write({"product_uom": self.uom_box.id, "product_uom_qty": 0.2})
+        purchase_move.copy(
+            {
+                "product_uom": purchase_move.product_id.uom_id.id,
+                "product_uom_qty": 1.0,
+            }
+        )._action_confirm(merge=False)
         self.assertEqual(len(self.kit_po.picking_ids[0].move_ids), 2)
-        self._set_done(sale_picking, {self.component_1: 2.0, self.component_2: 4.0})
+        self._set_done(sale_picking, {self.component_1: 3.0, self.component_2: 6.0})
         self._validate_without_backorder(sale_picking)
         purchase_picking = self.kit_po.picking_ids[0]
-        self.assertAlmostEqual(sum(purchase_picking.move_ids.mapped("quantity")), 2.0)
+        box_move = purchase_picking.move_ids.filtered(
+            lambda move: move.product_uom == self.uom_box
+        )
+        unit_move = purchase_picking.move_ids - box_move
+        # 3 kits: 0.2 box (2 kits) on the first move, 1 unit on the second.
+        self.assertAlmostEqual(box_move.quantity, 0.2)
+        self.assertAlmostEqual(unit_move.quantity, 1.0)
 
     def test_purchase_kit_pending_move_without_bom_line(self):
         self.bom.write({"company_id": self.company_a.id})
