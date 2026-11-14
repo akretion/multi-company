@@ -3,7 +3,7 @@
 
 from odoo import models
 from odoo.exceptions import UserError
-from odoo.tools import float_is_zero
+from odoo.tools import float_compare, float_is_zero
 
 # The moves passed to _compute_kit_quantities are the moves of the sale
 # picking: only the cancelled ones are excluded, nothing to subtract.
@@ -41,9 +41,8 @@ class StockMove(models.Model):
         )[product]
         if not bom:
             self._raise_intercompany_kit_bom_changed(self.product_id)
-        _, bom_lines = bom.explode(product, 1)
         self._check_intercompany_kit_bom_changed(
-            {bom_line: bom_line_data["qty"] for bom_line, bom_line_data in bom_lines}
+            bom._explode_intercompany_kit(product, 1)
         )
         return bom
 
@@ -99,7 +98,26 @@ class StockMove(models.Model):
         )
 
     def _set_intercompany_qty_done(self, qty):
+        """Spread the quantity to set over these moves.
+
+        ``qty`` and each move demand (``product_qty``) are in the product UoM.
+        Each move takes its demand at most, the last one the remainder. Raise
+        when the quantity to set exceeds the total demand, as the extra
+        quantity would over-receive the move.
+        """
         qty = max(qty, 0.0)
+        total_demand = sum(self.mapped("product_qty"))
+        rounding = self.product_id.uom_id.rounding
+        if float_compare(qty, total_demand, precision_rounding=rounding) > 0:
+            raise UserError(
+                self.env._(
+                    "The kit quantity to synchronize is greater than the "
+                    "pending demand for %(products)s: %(qty)s > %(demand)s",
+                    products=", ".join(self.product_id.mapped("display_name")),
+                    qty=qty,
+                    demand=total_demand,
+                )
+            )
         for move in self:
             move_qty = qty if move == self[-1] else min(qty, move.product_qty)
             move._set_quantity_done(
@@ -143,7 +161,8 @@ class StockMove(models.Model):
             line.id
             for line in consu_lines
             if not float_is_zero(
-                qty_by_bom_line[line], precision_rounding=line.product_uom_id.rounding
+                qty_by_bom_line[line],
+                precision_rounding=line.product_id.uom_id.rounding,
             )
         }
         stale_moves = self.filtered(lambda m: m.bom_line_id.id not in bom_line_ids)

@@ -86,20 +86,23 @@ class StockPicking(models.Model):
     def _action_done_intercompany_actions(self, purchase):
         self.ensure_one()
         try:
-            dest_company = purchase.company_id
-            intercompany_user = dest_company.intercompany_sale_user_id
+            purchase_company = purchase.company_id
+            intercompany_user = purchase_company.intercompany_sale_user_id
             po_picking_pending = purchase.picking_ids.filtered(
                 lambda x: x.state not in ["done", "cancel"]
             )
-            po_picking_pending.intercompany_picking_id = self.id
-            if not self.intercompany_picking_id and po_picking_pending:
-                self.intercompany_picking_id = po_picking_pending[0]
-            dest_picking = self.intercompany_picking_id.with_user(
+            # Delivery return pickings already have their counterpart return
+            # linked when both returns are created.
+            if not self.return_id:
+                po_picking_pending.intercompany_picking_id = self.id
+                if not self.intercompany_picking_id and po_picking_pending:
+                    self.intercompany_picking_id = po_picking_pending[0]
+            purchase_picking = self.intercompany_picking_id.with_user(
                 intercompany_user
-            ).with_company(dest_company)
+            ).with_company(purchase_company)
             # Hook to deal with moves related to phantom BOM in a different way
             kit_moves = self._set_intercompany_kit_quantities_done(
-                purchase, dest_picking
+                purchase, purchase_picking
             )
             for move in (self.move_ids - kit_moves).filtered(
                 lambda m: m.state != "cancel"
@@ -109,7 +112,7 @@ class StockPicking(models.Model):
                 # use both the SO-PO link and the intercompany_picking_id link
                 po_move_pending = (
                     move.sale_line_id.auto_purchase_line_id.move_ids.filtered(
-                        lambda x, ic_pick=dest_picking: x.picking_id == ic_pick
+                        lambda x, ic_pick=purchase_picking: x.picking_id == ic_pick
                         and x.state not in ["done", "cancel"]
                     )
                 )
@@ -186,8 +189,8 @@ class StockPicking(models.Model):
                     if not lot_id:
                         continue
                     po_ml.lot_id = ml._ensure_lot_multicompany()
-            if dest_company.sync_picking and self.state == "done":
-                dest_picking.sudo().with_context(
+            if purchase_company.sync_picking and self.state == "done":
+                purchase_picking.sudo().with_context(
                     cancel_backorder=bool(
                         self.env.context.get("picking_ids_not_to_backorder")
                     )
@@ -246,8 +249,8 @@ class StockPicking(models.Model):
             and self.sale_id.sudo().auto_purchase_order_id
         )
 
-    def _set_intercompany_kit_quantities_done(self, purchase, dest_picking):
-        """Update the destination picking quantities for kit moves.
+    def _set_intercompany_kit_quantities_done(self, purchase, purchase_picking):
+        """Update the purchase picking quantities for kit moves.
 
         Intercompany kit moves need special handling because the sale and
         purchase sides have different move structures. Return the sale moves

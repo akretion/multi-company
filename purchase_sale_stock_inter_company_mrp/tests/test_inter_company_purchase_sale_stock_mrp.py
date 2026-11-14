@@ -117,6 +117,11 @@ class TestPurchaseSaleStockInterCompanyMrp(TestPurchaseSaleInterCompany):
         interco_location = self.env.ref("stock.stock_location_inter_company")
         self.company_a._set_per_company_inter_company_locations(interco_location)
 
+    def _add_stock_user(self, *users):
+        group = self.env.ref("stock.group_stock_user")
+        for user in users:
+            user.groups_id |= group
+
     def _get_return_wizard(self, sale_picking):
         return self.env["stock.return.picking"].create({"picking_id": sale_picking.id})
 
@@ -243,26 +248,52 @@ class TestPurchaseSaleStockInterCompanyMrp(TestPurchaseSaleInterCompany):
         )
 
     def test_sale_kit_components_split_over_backorder(self):
+        """A kit split over a backorder must sync the cumulative quantities.
+
+        The first delivery makes one whole kit, so its receipt is done at 1
+        and the receipt backorder receives the 2 remaining kits.
+        """
         self._enable_sync_picking()
         sale_picking = self._approve_kit_po()
         self._set_done(sale_picking, {self.component_1: 3.0, self.component_2: 2.0})
         sale_picking.with_context(skip_backorder=True).button_validate()
         backorder = sale_picking.backorder_ids
         self.assertEqual(backorder.move_ids.product_id, self.component_2)
+        purchase_picking = self.kit_po.picking_ids.filtered(
+            lambda picking: picking.state == "done"
+        )
+        purchase_backorder = self.kit_po.picking_ids - purchase_picking
+        # 3 component_1 and 2 component_2 make one whole kit.
+        self.assertAlmostEqual(purchase_picking.move_ids.quantity, 1.0)
+        self.assertAlmostEqual(purchase_backorder.move_ids.product_uom_qty, 2.0)
         self._set_done(backorder, {self.component_2: 4.0})
         backorder.button_validate()
+        self.assertAlmostEqual(purchase_backorder.move_ids.quantity, 2.0)
         self.assertEqual(self.kit_po.order_line.qty_received, 3.0)
 
     def test_sale_kit_two_pending_receipt_moves(self):
         sale_picking = self._approve_kit_po()
         purchase_move = self.kit_po.picking_ids[0].move_ids
-        purchase_move.product_uom_qty = 2.0
-        purchase_move.copy({"product_uom_qty": 1.0})._action_confirm(merge=False)
+        # Split the purchase move: 0.2 box (2 units) in a different UoM,
+        # and 1 unit in the product UoM.
+        purchase_move.write({"product_uom": self.uom_box.id, "product_uom_qty": 0.2})
+        purchase_move.copy(
+            {
+                "product_uom": purchase_move.product_id.uom_id.id,
+                "product_uom_qty": 1.0,
+            }
+        )._action_confirm(merge=False)
         self.assertEqual(len(self.kit_po.picking_ids[0].move_ids), 2)
-        self._set_done(sale_picking, {self.component_1: 2.0, self.component_2: 4.0})
+        self._set_done(sale_picking, {self.component_1: 3.0, self.component_2: 6.0})
         self._validate_without_backorder(sale_picking)
         purchase_picking = self.kit_po.picking_ids[0]
-        self.assertAlmostEqual(sum(purchase_picking.move_ids.mapped("quantity")), 2.0)
+        box_move = purchase_picking.move_ids.filtered(
+            lambda move: move.product_uom == self.uom_box
+        )
+        unit_move = purchase_picking.move_ids - box_move
+        # 3 kits: 0.2 box (2 kits) on the first move, 1 unit on the second.
+        self.assertAlmostEqual(box_move.quantity, 0.2)
+        self.assertAlmostEqual(unit_move.quantity, 1.0)
 
     def test_purchase_kit_pending_move_without_bom_line(self):
         self.bom.write({"company_id": self.company_a.id})
@@ -299,6 +330,16 @@ class TestPurchaseSaleStockInterCompanyMrp(TestPurchaseSaleInterCompany):
         purchase_picking = self.kit_po.picking_ids[0]
         self.assertEqual(purchase_picking.move_ids.quantity, 0.0)
 
+    def test_kit_sync_quantity_overflow(self):
+        """Synchronizing more kits than the purchase demand must raise."""
+        self.bom.write({"company_id": self.company_a.id})
+        sale_picking = self._approve_kit_po()
+        sale_picking.move_ids._set_quantity_done(4.0)
+        self._assert_user_error(
+            lambda: self._validate_without_backorder(sale_picking),
+            "greater than the pending demand",
+        )
+
     def test_purchase_kit_partial(self):
         self.bom.write({"company_id": self.company_a.id})
         sale_picking = self._approve_kit_po()
@@ -313,8 +354,9 @@ class TestPurchaseSaleStockInterCompanyMrp(TestPurchaseSaleInterCompany):
         )
 
     def test_purchase_kit_validated_by_sale_user(self):
+        """A sale user can validate the delivery and sync the receipt."""
         self.bom.write({"company_id": self.company_a.id})
-        self.user_company_b.groups_id |= self.env.ref("stock.group_stock_user")
+        self._add_stock_user(self.user_company_b)
         sale_picking = self._approve_kit_po().with_user(self.user_company_b)
         sale_picking.move_ids._set_quantity_done(2.0)
         self._validate_without_backorder(sale_picking)
@@ -617,20 +659,63 @@ class TestPurchaseSaleStockInterCompanyMrp(TestPurchaseSaleInterCompany):
             purchase_return, {self.component_1: 9.0, self.component_2: 6.0}
         )
 
+    def test_purchase_kit_return_after_backorder(self):
+        """A kit return after a partial delivery must use the delivered
+        quantities, not the backorder demand."""
+        self._enable_sync_picking()
+        self.bom.write({"company_id": self.company_a.id})
+        sale_picking = self._approve_kit_po()
+        sale_picking.move_ids._set_quantity_done(2.0)
+        # Keep the backorder: the receipt is partially done.
+        sale_picking.with_context(skip_backorder=True).button_validate()
+        purchase_picking = self.kit_po.picking_ids[0]
+        expected = {self.component_1: 2.0, self.component_2: 4.0}
+        self._assert_quantities(purchase_picking, expected)
+        sale_return, purchase_return = self._create_returns(sale_picking)
+        self._assert_quantities(purchase_return, expected, "product_uom_qty")
+        self._set_return_done(sale_return)
+        sale_return.button_validate()
+        self._assert_quantities(purchase_return, expected)
+
+    def test_sale_kit_return_order_in_dozens(self):
+        """The kit return must work when ``stock.propagate_uom`` is set.
+
+        In that case the move UoM is the order line UoM, which differs from
+        the product UoM.
+        """
+        self.env["ir.config_parameter"].sudo().set_param("stock.propagate_uom", "1")
+        self._enable_sync_picking()
+        self.kit_po.order_line.write(
+            {
+                "product_uom": self.env.ref("uom.product_uom_dozen").id,
+                "product_qty": 2,
+            }
+        )
+        sale_picking = self._approve_kit_po()
+        self._set_done(sale_picking, {self.component_1: 24.0, self.component_2: 48.0})
+        sale_picking.button_validate()
+        # Return half of the two dozens, i.e. 12 kits.
+        sale_return, purchase_return = self._create_returns(
+            sale_picking, quantities={self.component_1: 12.0, self.component_2: 24.0}
+        )
+        self.assertEqual(purchase_return.move_ids.product_id, self.kit_product)
+        self.assertAlmostEqual(purchase_return.move_ids.product_uom_qty, 12.0)
+        self._set_return_done(sale_return)
+        sale_return.button_validate()
+        self.assertAlmostEqual(purchase_return.move_ids.quantity, 12.0)
+
     def test_purchase_kit_return_by_sale_user(self):
+        """A sale user without access to the purchasing company can return
+        an inter-company kit delivery."""
         self._enable_sync_picking()
         self.bom.write({"company_id": self.company_a.id})
         sale_picking = self._approve_kit_po()
         sale_picking.move_ids._set_quantity_done(3.0)
         sale_picking.button_validate()
-        stock_user_group = self.env.ref("stock.group_stock_user")
-        self.user_company_b.groups_id |= stock_user_group
-        self.intercompany_sale_user_id.write(
-            {
-                "groups_id": [Command.link(stock_user_group.id)],
-                "email": "ic@example.com",
-            }
-        )
+        self._add_stock_user(self.user_company_b, self.intercompany_sale_user_id)
+        # The purchase return is created by the inter-company user, whose
+        # email is required to post the return message.
+        self.intercompany_sale_user_id.email = "ic@example.com"
         self.company_a.intercompany_sale_user_id = self.intercompany_sale_user_id
         return_wizard = (
             self.env["stock.return.picking"]
